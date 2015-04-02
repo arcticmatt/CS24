@@ -1,0 +1,1 @@
+for binary multiplication, add b a times, but you break down a into it's binary representation
