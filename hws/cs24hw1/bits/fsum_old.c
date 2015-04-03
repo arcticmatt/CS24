@@ -27,6 +27,10 @@ float my_fsum(FloatArray *floats) {
     float next_sum;
     int i;
     float compensation;
+    float sum1;
+    float sum2;
+    float comp1;
+    float comp2;
 
     for (i = 0; i < floats->count; i++) {
         next_sum = sum + floats->values[i];
@@ -36,7 +40,17 @@ float my_fsum(FloatArray *floats) {
         if (fabs(compensation) < .00001) {
             sum = next_sum;
         } else {
-            sum = sum + (floats->values[i] + compensation);
+            printf("compensation = %f\n", compensation);
+            sum1 = sum + (floats->values[i] + compensation);
+            sum2 = (sum + floats->values[i]) + compensation;
+            comp1 = (sum1 - sum) - floats->values[i];
+            comp2 = (sum2 - sum) - floats->values[i];
+            printf("comp1 = %f\n", comp1);
+            printf("comp2 = %f\n", comp2);
+            if (fabs(comp1) < fabs(comp2))
+                sum = sum1;
+            else
+                sum = sum2;
         }
     }
 
