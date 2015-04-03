@@ -43,8 +43,8 @@ void free_alu(ALU *alu) {
  * recognize the opcode, it should simply produce a zero result.
  */
 void alu_eval(ALU *alu) {
-    unsigned long A, B, aluop;
-    unsigned long result;
+    long A, B, aluop;
+    long result;
 
     A = pin_read(alu->in1);
     B = pin_read(alu->in2);
@@ -55,6 +55,43 @@ void alu_eval(ALU *alu) {
     /*======================================*/
     /* TODO:  Implement the ALU logic here. */
     /*======================================*/
+    switch (aluop) {
+    case ALUOP_ADD:
+        result = A + B;
+        break;
+    case ALUOP_INV:
+        result = ~A;
+        break;
+    case ALUOP_SUB:
+        result = A - B;
+        break;
+    case ALUOP_XOR:
+        result = A ^ B;
+        break;
+    case ALUOP_OR:
+        result = A | B;
+        break;
+    case ALUOP_INCR:
+        result = A + 1;
+        break;
+    case ALUOP_AND:
+        result = A & B;
+        break;
+    case ALUOP_SRA:
+        result = A >> 1;
+        break;
+    case ALUOP_SRL:
+        result = A >> 1;
+        break;
+    case ALUOP_SLA:
+        result = A << 1;
+        break;
+    case ALUOP_SLL:
+        result = A << 1;
+        break;
+    default:
+        break;
+    }
 
     pin_set(alu->out, result);
 }

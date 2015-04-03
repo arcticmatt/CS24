@@ -4,7 +4,7 @@
  * determines when the processor should jump to a different program location.
  */
 
- 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -44,7 +44,7 @@ void free_branch_unit(BranchUnit *bru) {
 }
 
 
-/*! 
+/*!
  * This function performs the branching test.  It reads the current opcode and
  * the output from the first source register, and then writes either BRANCH or
  * NOBRANCH to the branch pin.
@@ -62,6 +62,10 @@ void branch_test(BranchUnit *bru) {
     /*                                                                      */
     /*        Use pin_set(bru->branch, ...) to set the value on the bus.    */
     /*======================================================================*/
-
+    if (aluop == ALUOP_BNZ && A != 0) {
+        pin_set(bru->branch, BRANCH);
+    } else {
+        pin_set(bru->branch, NOBRANCH);
+    }
 }
 
