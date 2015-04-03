@@ -75,9 +75,10 @@ void nextPC(ProgramCounter *pc) {
     /*                                                                       */
     /*        To read the branch address, use pin_read(pc->branch_addr).     */
     /*=======================================================================*/
-
-    /* TODO:  Placeholder that just increments the program counter. */
-    next_pc = pin_read(pc->pc_pin) + 1;
+    if (pin_read(pc->branch) == BRANCH)
+        next_pc = pin_read(pc->branch_addr);
+    else
+        next_pc = pin_read(pc->pc_pin) + 1;
 
     /* Set the new value for the program counter. */
     pin_set(pc->pc_pin, next_pc);
