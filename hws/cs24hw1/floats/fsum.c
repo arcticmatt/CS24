@@ -21,23 +21,29 @@ float fsum(FloatArray *floats) {
 }
 
 
-/* TODO:  IMPLEMENT my_fsum() HERE, AND DESCRIBE YOUR APPROACH. */
+/*
+ * Here we implement a more accurate float summing method
+ * by introducing a compensation term into the summation.
+ * Answering the questions in the set...
+ * 1) Algebraically, the compensation term should always be equal to 0.
+ * 2) It deviates from this expected value in situations where we are adding
+ *    floats that differ a lot in magnitude.
+ * 3) We can take advantage of the compensation term to improve accuracy
+ *    by subtracting it from our next_sum term. This brings our next_sum term
+ *    closer to what it actually should be.
+ */
 float my_fsum(FloatArray *floats) {
     float sum = 0;
     float next_sum;
     int i;
-    float compensation;
+    float compensation = 0;
 
     for (i = 0; i < floats->count; i++) {
-        next_sum = sum + floats->values[i];
-        // Need to parentheses because of float imprecision
-        compensation = (next_sum - sum) - floats->values[i];
-        /*printf("compensation = %f\n", compensation);*/
-        if (fabs(compensation) < .00001) {
-            sum = next_sum;
-        } else {
-            sum = sum + (floats->values[i] + compensation);
-        }
+        // Apply compensation term
+        next_sum = sum + (floats->values[i] - compensation);
+        // Update compensation term; need parentheses because of float imprecision
+        compensation += (next_sum - sum) - floats->values[i];
+        sum = next_sum;
     }
 
     return sum;

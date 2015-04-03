@@ -36,4 +36,10 @@ anyways as it depends entirely on how the file was written.
 3) What kinds of inputs would also cause the "most accurate" approach to exhibit
 large errors?
 
-Lots of small numbers and one big number?
+An input file with lots of relatively small numbers and one relatively large number
+which completely dominates the final answer would exhibit large errors. This is
+because adding this type of input in order of increasing magnitude would not help,
+as the final large input would dominate the answer regardless. Thus, the answer
+would not retain any of the precision of the relatively small numbers, which means
+the majority of our input would not be accounted for in our final answer
+(a large error).
