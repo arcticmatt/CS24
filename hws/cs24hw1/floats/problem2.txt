@@ -1,0 +1,39 @@
+fsum problems
+
+1) Why are the results from
+    a. adding in the order that the values appear in the input
+    b. adding in increasing order of magnitude
+    c. adding in decreasing order of magnitude
+different?
+
+The results are different because in C, floats only have 24/23 bits of precision.
+So if we add a large float and a small float together, we lose some precision
+of the small float, because the significant figures are used up to capture
+the value of the large float. That means if we add in increasing order of magnitude,
+we will maintain our precision for longer than if we add in decreasing order
+of magnitude (and if we add in the order that the values appear in the input,
+it just depends on the order of the text input). Note that even when we add in
+increasing order of magnitude, we will still lose some precision when we get
+to the larger numbers - however, the sum up to that point will be more precise
+than the sum at the equivalent point using the decreasing order. So clearly the final
+results will deviate.
+
+2) Of the three approaches that fsum uses, which is the most accurate, and why?
+
+The most accurate approach is approach b: adding in increasing order of magnitude.
+The reason why was basically explained in my answer to the above question, but
+I'll restate it here. Basically, adding in increasing order will preserve
+the precision of the sum for longer than if we add in decreasing order. That is,
+by adding the small numbers first, we minimize the loss of precision. If we were
+to add the big numbers first, the significant figures would be immediately used
+up to capture the value of the large floats, and there would be less room to capture
+the significance of the remaining smaller floats. This problem does not occur
+when adding in increasing order of magnitude. Since adding in increasing order
+of magnitude is the optimal way, we can also conclude that it is better than just
+adding the inputs in the order that they are given, which doesn't make any sense
+anyways as it depends entirely on how the file was written.
+
+3) What kinds of inputs would also cause the "most accurate" approach to exhibit
+large errors?
+
+Lots of small numbers and one big number?

@@ -23,7 +23,38 @@ float fsum(FloatArray *floats) {
 
 /* TODO:  IMPLEMENT my_fsum() HERE, AND DESCRIBE YOUR APPROACH. */
 float my_fsum(FloatArray *floats) {
-    return 0;
+    float sum = 0;
+    float next_sum;
+    int i;
+    float compensation;
+    float sum1;
+    float sum2;
+    float comp1;
+    float comp2;
+
+    for (i = 0; i < floats->count; i++) {
+        next_sum = sum + floats->values[i];
+        // Need to parentheses because of float imprecision
+        compensation = (next_sum - sum) - floats->values[i];
+        /*printf("compensation = %f\n", compensation);*/
+        if (fabs(compensation) < .00001) {
+            sum = next_sum;
+        } else {
+            printf("compensation = %f\n", compensation);
+            sum1 = sum + (floats->values[i] + compensation);
+            sum2 = (sum + floats->values[i]) + compensation;
+            comp1 = (sum1 - sum) - floats->values[i];
+            comp2 = (sum2 - sum) - floats->values[i];
+            printf("comp1 = %f\n", comp1);
+            printf("comp2 = %f\n", comp2);
+            if (fabs(comp1) < fabs(comp2))
+                sum = sum1;
+            else
+                sum = sum2;
+        }
+    }
+
+    return sum;
 }
 
 
@@ -57,9 +88,7 @@ int main() {
     printf("Sum computed in order of increasing magnitude:  %e\n", sum2);
     printf("Sum computed in order of decreasing magnitude:  %e\n", sum3);
 
-    /* TODO:  UNCOMMENT
     printf("My sum:  %e\n", my_sum);
-    */
 
     return 0;
 }

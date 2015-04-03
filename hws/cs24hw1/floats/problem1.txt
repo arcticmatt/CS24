@@ -1,0 +1,51 @@
+Practice Problem 2.46
+
+x = 0.00011001100110011001100 (binary)
+00011001100110011001100
+
+A) What is the binary representation of 0.1 - x?
+
+The binary representation of 0.1 is on top, and the binary representation
+of x is on the bottom:
+
+  0.0001100110011001100110011[0011]
+- 0.00011001100110011001100[0000]
+___________________________________
+  0.0000000000000000000000011[0011]
+
+So the binary representation of 0.1 - x is
+0.0000000000000000000000011[0011]
+
+B)  What is the approximate decimal value of 0.1 - x?
+
+To do this, we will first convert x to its decimal representation.
+We have that
+    x = 1 * 2^-4 + 1 * 2^-5 + 1 * 2^-8 + 1 * 2^-9 + 1 * 2^-12 + 1 * 2^-13
+        + 1 * 2^-16 + 1 * 2^-17 + 1 * 2^-20 + 1 * 2^-21
+Then we can just do 0.1 - x, and plugging in the decimal representation, get
+the answer
+    0.1 - x = 9.5367432e-8
+
+C) The clock starts at 0 when the system is first powered up and keeps counting up
+from there. In this case, the system had been running for around 100 hours. What was
+the difference between the actual time and the time computed by the software?
+
+Let us convert hours to number of 0.1 second intervals. We have that 100 hours
+is equal to:
+
+100 hours * (60 minutes/hour) * (60 seconds/minute) * (10 0.1 second intervals/second)
+    = 3600000 0.1 second intervals
+
+Each 0.1 second interval is off by approximately 9.5367432e-8 seconds. So overall,
+the time is off by approximately
+
+9.5367432e-8 * 3600000 = .3433227552 seconds
+
+D) The system predicts where an incoming missile will appear based on its
+velocity and the time of the last radar detection. Given that a Scud travels at
+around 2000 meteres per second, how far off was its prediction?
+
+The time is off by approximately .3433227552 seconds, and the missile travels
+around 2000 meteres per second, which means the prediction was off by around
+
+2000 * .3433227552 = 686.6455104 meteres
