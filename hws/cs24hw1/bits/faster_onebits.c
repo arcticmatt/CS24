@@ -1,6 +1,5 @@
 #include <stdio.h>
 
-
 int count_onebits(unsigned int n);
 
 
@@ -34,17 +33,13 @@ int count_onebits(unsigned int n) {
     int count = 0;
 
     /*
-     * Check every bit in n and see if it is set.
+     * Count number of set bits in n using method described in problem2.txt
      */
     while (n != 0) {
-        // Check if bit is set. If so, increment count
-        if ((n & 1) == 1) {
-            count++;
-        }
-        // Shift n right by 1
-        n >>= 1;
+        // Clear least significant set bit of n
+        n = n & (n - 1);
+        count++;
     }
 
     return count;
 }
-

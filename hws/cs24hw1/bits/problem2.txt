@@ -1,0 +1,45 @@
+1) What does the expression
+    n = n & (n - 1)
+do to n?
+
+This expression clears the least significant bit in n. That is, it converts
+the least significant set bit in n from a 1 to a 0. For example,
+    5 = 5 & 4
+    n = 101 & 100
+    n = 100
+We can see that the least significant (the rightmost) set bit got converted from
+a 1 to a 0.
+
+2) How does it work?
+
+It works because when you subtract 1 from a number n, you are considering n's
+least significant bit. For example, consider our above example, with 5 and 4.
+When we do 5 - 1 in binary, we do
+ 101
+-  1
+_____
+ 100
+
+ This gives us two possible scenarios. The first scenario is if the least significant
+ bit of n is a 1. Then, that bit will just turn to 0. The second scenario
+ is if the least significant bit of n is a 0. Then we use the borrow method
+ for subtraction, and the first set bit of n will turn to 0, with all bits
+ to the right of that bit being 1 (the rest are unchanged). For example,
+  110100
+-      1
+________
+  110011
+Thus, it is clear to see why n & (n - 1) does what it does. The least
+significant set bit gets anded with a 0 in both scenarios, which means the result
+is a 0. And in the second scenario, all the bits to the right of the least
+significant set bit will be the result of 0 & 1, which is also 0 as desired.
+
+3) How might it provide a faster way to count one-bits in a value?
+
+This provides a faster way to count one-bits because instead of going through
+each bit and seeing if it is a 1 or 0, we can just keep doing
+    n = n & (n - 1)
+until n is zero and count how many times we had to do it. This works because
+we know that this operation clears the least significant set bit of n.
+This is faster because it depends on how many set bits n has, not how many total
+bits n has.
