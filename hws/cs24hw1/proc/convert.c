@@ -16,6 +16,7 @@
 
 int prepare(int line_no, char *input, char *clean, char *comment);
 int convert(const char *bits);
+int powerOfTwo(int power);
 
 
 int main() {
@@ -140,7 +141,9 @@ int prepare(int line_no, char *input, char *clean, char *comment) {
  * we don't need to worry about signed/unsigned issues.
  */
 int convert(const char *bits) {
-    int length, value;
+    int length;
+    int value = 0;
+    int i;
 
     assert(bits != 0);
 
@@ -160,7 +163,18 @@ int convert(const char *bits) {
     /*        variable to the actual value represented by that     */
     /*        string of bits.                                      */
     /*=============================================================*/
+    for (i = 0; i < length; i++) {
+        value += (bits[i] - '0') * powerOfTwo(length - i - 1);
+    }
 
     return value;
 }
 
+int powerOfTwo(int power) {
+    int value = 1;
+    int i;
+    for (i = 0; i < power; i++) {
+        value <<= 1;
+    }
+    return value;
+}

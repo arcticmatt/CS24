@@ -44,7 +44,7 @@ void free_alu(ALU *alu) {
  */
 void alu_eval(ALU *alu) {
     long A, B, aluop;
-    long result;
+    unsigned long result;
 
     A = pin_read(alu->in1);
     B = pin_read(alu->in2);

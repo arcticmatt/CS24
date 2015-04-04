@@ -1,0 +1,75 @@
+# My divide program. Registers are:
+#   R0 = dividend
+#   R1 = divisor
+#   R2 = 0 (constant)
+#   R3 = 1 (constant)
+#   R4 = 0x80000000 (1 in 31st position, 0 in other 30 positions - mask)
+#   R5 = a temporary variable (stores result of bitmask)
+#   R6 = quotient
+#   R7 = remainder
+# Initially,
+#   R0 = dividend
+#   R1 = divisor
+#   R2 = 0
+#   R3 = 1
+#   R4 = 0x80000000
+#   R5 = 0
+#   R6 = 0
+#   R7 = 0
+#
+# =======================
+# ===== PSEUDO CODE =====
+# =======================
+
+# 0)  XOR R6, R6, R6 (quotient = 0)
+# 1)  ADD R0, R2, R7 (remainder = 0)
+# 2)  WHILE:
+# 2)     SUB R7, R1, R7
+# 3)     AND R7, R4, R5
+# 4)     BNZ R5, DONE (if it does NOT go to DONE, it means we have an non-negative
+#                      long because the signed bit is 0)
+# 5)     ADD R6, R3, R6
+# 6)     BNZ R3, WHILE
+# 7)  DONE:
+
+# 7)  WHILE:
+# 7)     AND R7, R4, R5
+# 8)     BNZ R5, SKIP (if it does NOT go to SKIP, it means we have an non-negative
+#                     long because the signed bit is 0)
+# 9)     BNZ R3, DONE (break)
+# 10) SKIP:
+# 10)    ADD R7, R1, R7
+# 11)    BNZ R3, WHILE
+# 12) DONE:
+
+# =============================
+# ====== LABELED ASSEMBLY =====
+# =============================
+
+# 0)  0011 1 110 110 110 (XOR quotient with itself)
+# 1)  0000 1 000 010 111 (remainder = dividend)
+# 2)  0010 1 111 001 111 (remainder = remainder - divisor)
+# 3)  1000 1 111 100 101 (tmp = remainder & R4)
+# 4)  1010 0 101 000 111 (BNZ to DONE at line 7)
+# 5)  0000 1 110 011 110 (quotient = quotient + 1)
+# 6)  1010 0 011 000 010 (BNZ to WHILE at line 2)
+# 7)  1000 1 111 100 101 (tmp = remainder & R4)
+# 8)  1010 0 101 001 010 (BNZ to SKIP at line 10)
+# 9)  1010 0 011 001 100 (BNZ to DONE at line 12)
+# 10) 0000 1 111 001 111 (remainder = remainder + divisor)
+# 11) 1010 0 011 000 111 (BNZ to WHILE at line 7)
+# 12) 1111 0 111 111 111 (DONE)
+
+fb6
+217
+bcf
+23e5
+2947
+39e
+28c2
+23e5
+294a
+28cc
+3cf
+28c7
+3dff
