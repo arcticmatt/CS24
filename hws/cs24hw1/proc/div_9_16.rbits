@@ -1,8 +1,8 @@
-0009
-0010
-0000
-0001
-80000000
-ffff
-ffff
-ffff
+0009     # dividend
+0010     # divisor
+0000     # constant term
+0001     # constant term
+80000000 # constant term (used for bitmask)
+ffff     # temporary variable (stores result of bitmask
+ffff     # initial value for quotient (doesn't matter, gets set in code)
+ffff     # initial value for remainder (doesn't matter, gets set in code)
