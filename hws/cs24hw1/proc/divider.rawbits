@@ -58,7 +58,7 @@
 # 9)  1010 0 011 001 100 (BNZ to DONE at line 12)
 # 10) 0000 1 111 001 111 (remainder = remainder + divisor)
 # 11) 1010 0 011 000 111 (BNZ to WHILE at line 7)
-# 12) 1111 0 111 111 111 (DONE)
+# 12) 1111 0 111 111 111 (DONE - results in R6 and R7)
 
 0011 1 110 110 110
 0000 1 000 010 111
