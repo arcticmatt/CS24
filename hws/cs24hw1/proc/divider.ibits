@@ -51,7 +51,7 @@
 # 2)  0010 1 111 001 111 (remainder = remainder - divisor)
 # 3)  1000 1 111 100 101 (tmp = remainder & R4)
 # 4)  1010 0 101 000 111 (BNZ to DONE at line 7)
-# 5)  0000 1 110 011 110 (quotient = quotient + 1)
+# 5)  0000 1 110 011 110 (quotient = quotient + 1. could also use INCR here)
 # 6)  1010 0 011 000 010 (BNZ to WHILE at line 2)
 # 7)  1000 1 111 100 101 (tmp = remainder & R4)
 # 8)  1010 0 101 001 010 (BNZ to SKIP at line 10)
