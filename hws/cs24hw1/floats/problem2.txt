@@ -16,7 +16,11 @@ it just depends on the order of the text input). Note that even when we add in
 increasing order of magnitude, we will still lose some precision when we get
 to the larger numbers - however, the sum up to that point will be more precise
 than the sum at the equivalent point using the decreasing order. So clearly the final
-results will deviate.
+results will deviate for adding in order of increasing/decreasing magnitude.
+Then, it is clear to see that adding in the order that the values appear
+will also give us a different answer, because the precision maintained along the
+way is dependent upon the order in which the input is arranged, which is, in our
+case, different than increasing/decreasing order.
 
 2) Of the three approaches that fsum uses, which is the most accurate, and why?
 
