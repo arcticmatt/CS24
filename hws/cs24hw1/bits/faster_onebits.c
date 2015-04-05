@@ -33,10 +33,12 @@ int count_onebits(unsigned int n) {
     int count = 0;
 
     /*
-     * Count number of set bits in n using method described in problem2.txt
+     * Count number of set bits in n using method described in problem2.txt.
+     * The basic overview is that we keep on clearing the least significant set
+     * bit of n, and count how many times we need to do this.
      */
     while (n != 0) {
-        // Clear least significant set bit of n
+        // Clear least significant set bit of n.
         n = n & (n - 1);
         count++;
     }

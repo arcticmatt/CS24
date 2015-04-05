@@ -3,6 +3,3 @@
 0000     # constant term
 0001     # constant term
 80000000 # constant term (used for bitmask)
-ffff     # temporary variable (stores result of bitmask
-ffff     # initial value for quotient (doesn't matter, gets set in code)
-ffff     # initial value for remainder (doesn't matter, gets set in code)

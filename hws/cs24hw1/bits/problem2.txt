@@ -33,6 +33,7 @@ Thus, it is clear to see why n & (n - 1) does what it does. The least
 significant set bit gets anded with a 0 in both scenarios, which means the result
 is a 0. And in the second scenario, all the bits to the right of the least
 significant set bit will be the result of 0 & 1, which is also 0 as desired.
+All other bits remain unchanged, as they just get anded with themselves.
 
 3) How might it provide a faster way to count one-bits in a value?
 
@@ -41,5 +42,7 @@ each bit and seeing if it is a 1 or 0, we can just keep doing
     n = n & (n - 1)
 until n is zero and count how many times we had to do it. This works because
 we know that this operation clears the least significant set bit of n.
-This is faster because it depends on how many set bits n has, not how many total
-bits n has.
+This is "faster" because it depends on how many set bits n has, not how many total
+bits n has. By "faster" I mean that in most cases, it will take less operations, because
+usually numbers have less set bits than bits. But the worst case runtime is the same,
+because at worst a number can have all of its bits set.

@@ -27,7 +27,7 @@ float fsum(FloatArray *floats) {
  * Answering the questions in the set...
  * 1) Algebraically, the compensation term should always be equal to 0.
  * 2) It deviates from this expected value in situations where we are adding
- *    floats that differ a lot in magnitude.
+ *    floats that differ a lot in magnitude, which causes us to lose precision.
  * 3) We can take advantage of the compensation term to improve accuracy
  *    by subtracting it from our next_sum term. This brings our next_sum term
  *    closer to what it actually should be.

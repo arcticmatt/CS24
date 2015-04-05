@@ -52,9 +52,11 @@ void alu_eval(ALU *alu) {
 
     result = 0;
 
-    /*======================================*/
-    /* TODO:  Implement the ALU logic here. */
-    /*======================================*/
+    /*
+     * ALU Logic: This switch-case statement handles all the
+     * ALUOP_* values specified in instruction.h, except for ALUOP_BNZ
+     * and ALUOP_DONE, which the ALU is simply not responsible for.
+     */
     switch (aluop) {
     case ALUOP_ADD:
         result = A + B;
@@ -78,10 +80,10 @@ void alu_eval(ALU *alu) {
         result = A & B;
         break;
     case ALUOP_SRA:
-        result = ((long) A) >> 1;
+        result = ((long) A) >> 1; // To get an arithmetic shift, cast to signed long
         break;
     case ALUOP_SRL:
-        result = A >> 1;
+        result = A >> 1; // C performs a logical shift on unsigned longs
         break;
     case ALUOP_SLA:
         result = A << 1;

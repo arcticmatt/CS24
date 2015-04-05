@@ -13,16 +13,16 @@
 #   R2 = 0
 #   R3 = 1
 #   R4 = 0x80000000
-#   R5 = 0
-#   R6 = 0
-#   R7 = 0
+#   R5 = not initially set
+#   R6 = not initially set
+#   R7 = not initially set
 #
 # =======================
 # ===== PSEUDO CODE =====
 # =======================
 
 # 0)  XOR R6, R6, R6 (quotient = 0)
-# 1)  ADD R0, R2, R7 (remainder = 0)
+# 1)  ADD R0, R2, R7 (remainder = dividend)
 # 2)  WHILE:
 # 2)     SUB R7, R1, R7
 # 3)     AND R7, R4, R5

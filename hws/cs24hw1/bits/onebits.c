@@ -34,14 +34,15 @@ int count_onebits(unsigned int n) {
     int count = 0;
 
     /*
-     * Check every bit in n and see if it is set.
+     * Check every bit in n and see if it is set. We check every bit by
+     * checking the rightmost bit, then shifting right.
      */
     while (n != 0) {
-        // Check if bit is set. If so, increment count
+        // Check if bit is set by using a bitmas. If so, increment count.
         if ((n & 1) == 1) {
             count++;
         }
-        // Shift n right by 1
+        // Shift n right by 1.
         n >>= 1;
     }
 
