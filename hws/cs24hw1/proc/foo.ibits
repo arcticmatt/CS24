@@ -1,0 +1,7 @@
+# My cool program.  Registers are:
+#     R1 = some value
+#     R2 = another value
+33    # Very important instruction!
+91    # Also very important!
+6e    
+ff    # Meh.

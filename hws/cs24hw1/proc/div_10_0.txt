@@ -1,0 +1,7 @@
+With the pair of inputs
+    10 / 0,
+my program runs into an infinite loop. This is because inside the first while-loop,
+we only break if remainder < 0. And since we initialize remainder to be equal to
+the dividend, which is 10, and the only way we modify remainder inside the while-loop
+is by subtracting 0 from it, remainder while never reach below 0. Thus, the loop will
+keep running forever.

@@ -16,4 +16,3 @@ clean:
 	rm -f fsum *.o *~
 
 .PHONY: all clean
-

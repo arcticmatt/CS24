@@ -83,4 +83,3 @@ void nextPC(ProgramCounter *pc) {
     /* Set the new value for the program counter. */
     pin_set(pc->pc_pin, next_pc);
 }
-

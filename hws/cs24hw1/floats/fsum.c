@@ -39,9 +39,14 @@ float my_fsum(FloatArray *floats) {
     float compensation = 0;
 
     for (i = 0; i < floats->count; i++) {
-        // Apply compensation term
+        // Apply compensation term to make the sum closer to what it should be.
+        // We do this each iteration to improve accuracy.
         next_sum = sum + (floats->values[i] - compensation);
-        // Update compensation term; need parentheses because of float imprecision
+        // Update compensation term; need parentheses because of float imprecision.
+        // Notice that we to +=; this means we are really saying
+        // compensation = ((next_sum - sum) - floats->values[i]) + compensation.
+        // This makes sense, as we want the compensation to be the difference between
+        // what the next_sum is and what it actually should be.
         compensation += (next_sum - sum) - floats->values[i];
         sum = next_sum;
     }
