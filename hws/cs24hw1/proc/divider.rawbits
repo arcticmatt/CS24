@@ -41,6 +41,10 @@
 # 10)    ADD R7, R1, R7
 # 11)    BNZ R3, WHILE
 # 12) DONE:
+#
+# Note that theoretically, we don't need the while loop because one addition
+# of divisor to remainder makes it positive. We'll keep it because branching
+# is fun.
 
 # =============================
 # ====== LABELED ASSEMBLY =====
