@@ -40,10 +40,25 @@ anyways as it depends entirely on how the file was written.
 3) What kinds of inputs would also cause the "most accurate" approach to exhibit
 large errors?
 
-An input file with lots of relatively small numbers and one relatively large number
-which completely dominates the final answer would exhibit large errors. This is
-because adding this type of input in order of increasing magnitude would not help,
-as the final large input would dominate the answer regardless. Thus, the answer
-would not retain any of the precision of the relatively small numbers, which means
-the majority of our input would not be accounted for in our final answer
-(a large error).
+First let us consider another way to lose precision when adding two floats, a way
+in which two floats are added such that the result has too many significant figures
+and rounding needs to take place. Consider, for the sake of example, if we only
+had two numbers of precision. Now consider what would happen if we added 64 and 50. We get that
+
+  64
++ 50
+____
+ 114
+
+But we only have two numbers of precision. So we have to round 114 to
+1.1e2, losing precision in the process. Note that in actuality, we have 24 bits
+of precision (and 8 bits to store the exponent). But this example gets the point across.
+
+So, now back to the actual question. We can see that if we have an input file
+such that every number uses all 24 bits of precision, all the numbers are of
+the same magnitude, and adding the numbers results in a number of greater magnitude,
+we will incur the loss of precision discussed right above. That
+is, each addition will introduce some error into our answer, basically because
+of rounding error. And these errors will not be insignificant because all the numbers
+are of the same magnitude, and the error occurs at a significant level (see the
+example above, where the error occurs in the ones place).
