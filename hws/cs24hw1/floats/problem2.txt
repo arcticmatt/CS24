@@ -55,10 +55,9 @@ But we only have two numbers of precision. So we have to round 114 to
 of precision (and 8 bits to store the exponent). But this example gets the point across.
 
 So, now back to the actual question. We can see that if we have an input file
-such that every number uses all 24 bits of precision, all the numbers are of
-the same magnitude, and adding the numbers results in a number of greater magnitude,
-we will incur the loss of precision discussed right above. That
-is, each addition will introduce some error into our answer, basically because
-of rounding error. And these errors will not be insignificant because all the numbers
-are of the same magnitude, and the error occurs at a significant level (see the
-example above, where the error occurs in the ones place).
+such that all the numbers are of the same magnitude, and adding the numbers results
+in a number with more than 24 bits of precision, we will incur the loss of
+precision discussed right above. That is, each addition can introduce some error
+into our answer, basically because of rounding error. And these errors will not
+be insignificant because all the numbers are of the same magnitude, and the error
+occurs at a significant level (see the example above, where the error occurs in the ones place).
