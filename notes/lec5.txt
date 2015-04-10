@@ -1,0 +1,2 @@
+- Intel/AT&T have different orders when giving instructions
+- AT&T usually left to right (subtraction, comparision messed up)
