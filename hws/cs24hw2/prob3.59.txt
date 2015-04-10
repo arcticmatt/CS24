@@ -1,0 +1,56 @@
+int switch_prob(int x, int n)
+{
+    int result = x;
+
+    switch(n) {
+
+    case 50:
+    case 52:
+        result = result << 2;
+        break;
+
+    case 53:
+        result = result >> 2;
+        break;
+
+    case 54:
+        result *= 3;
+        // Fall through
+
+    case 55:
+        result *= result;
+        // Fall through
+
+    case 51:
+    default:
+        result = x + 10;
+    }
+
+    return result;
+}
+
+===== Dissecting the instructions =====
+
+8048420: push   %ebp
+8048421: mov    %esp, %ebp
+8048423: mov    0x8(%ebp), %eax               # eax = x
+8048426: mov    0xc(%ebp), %edx               # edx = n
+8048429: sub    $0x32, %edx                   # edx = edx - 50
+804842c: cmp    $0x5, %edx                    # updates flags as for edx - 5
+804842f: ja     8048448 <switch_prob+0x28>    # jump if greater (if edx > 5) to instr at M[8048448]. we get this behavior because operand has no prefix
+8048431: jmp    *0x80485d0(, %edx, 4)         # indirect jump, so jumps to M[0x80485d0 + %edx * 4] (a spot in the jump table)
+                                                if edx == 0, jumps to 0x08048438
+                                                if edx == 1, jumps to 0x08048448
+                                                if edx == 2, jumps to 0x08048438
+                                                if edx == 3, jumps to 0x0804843d
+                                                if edx == 4, jumps to 0x08048442
+                                                if edx == 5, jumps to 0x08048445
+8048438: shl    $0x2, %eax                    # eax = eax << 2
+804843b: jmp    804844b <switch_prob+0x2b>    # jumps to instr at M[804844b]
+804843d: sar    $0x2, %eax                    # eax = eax >> 2 (arithmetic)
+8048440: jmp    804844b <switch_prob+0x2b>    # jumps to instr at M[804844b]
+8048442: lea    (%eax, %eax, 2), %eax         # eax = 3 * eax
+8048445: imul   %eax, %eax                    # eax = eax * eax
+8048448: add    $0xa, %eax                    # eax = eax + 10
+804844b: pop    %ebp                          # pop ebp from stack
+804844c: ret                                  # Pops top of stack into PC
