@@ -16,7 +16,7 @@ gcd_continue:
     pushl %edx          # Push remainder onto the stack
     pushl 12(%ebp)      # Push b onto the stack
     call gcd            # Make recursive call
-    addl $12, %esp      # Pops stack back up to original ret addr
+    addl $12, %esp      # Puts sp in position to pop stack back up to original ret addr
 gcd_return:
     movl %ebp, %esp     # Pop local stack
     popl %ebp           # Pop old base of frame
