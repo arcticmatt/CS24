@@ -15,7 +15,7 @@ fact_continue:
 	subl $1,%eax       /* Compute arg-1 for recursive call. */
 	pushl %eax         /* Push arg-1 onto stack. */
 	call fact          /* Make recursive call. */
-fact_resume:		
+fact_resume:
 	imull 8(%ebp),%eax /* Upon return multiply result by arg. */
 	                   /* Result ends up in return register (eax). */
 	jmp fact_return    /* We had to align return as a branch target. */
