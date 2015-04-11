@@ -6,6 +6,7 @@ int min(int x, int y);
 int main(int argc, char **argv) {
     int arg1 = -1;
     int arg2 = -1;
+    int result;
 
     if (argc == 3) {
         arg1 = atoi(argv[1]);
@@ -16,6 +17,8 @@ int main(int argc, char **argv) {
 
     if (arg1 >= 0 && arg2 >= 0) {
         printf("Calling gcd(%d, %d)\n", arg1, arg2);
+        result = gcd(arg1, arg2);
+        printf("gcd(%d, %d) = %d\n", arg1, arg2, result);
     } else {
         printf("Invalid number of args or invalid args, arg1 = %d, \
                 arg2 = %d, argc = %d\n", arg1, arg2, argc);

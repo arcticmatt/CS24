@@ -19,10 +19,7 @@ gcd:
 	movl	8(%ebp), %eax
 	cltd
 	idivl	12(%ebp)
-	movl	%eax, %edx
-	movl	8(%ebp), %eax
-	subl	%edx, %eax
-	movl	%eax, -12(%ebp)
+	movl	%edx, -12(%ebp)
 	subl	$8, %esp
 	pushl	-12(%ebp)
 	pushl	12(%ebp)
