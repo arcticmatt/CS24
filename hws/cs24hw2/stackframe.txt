@@ -1,0 +1,14 @@
+Address    |    Value    |    Logical Role
+-------------------------------------------
+0x1008     %eax = 2      The function argument, which gets decremented down to 0
+0x100c     %ebp = sp     The base pointer for the stack
+0x1010     %eax = 1      The function argument, which gets decremented down to 0
+0x1014     %ebp = sp     The base pointer for the stack
+0x1018     %eax = 0      The function argument, which gets decremented down to 0
+0x101c     %ebp = sp     The base pointer for the stack
+
+after this point, we will jump to fact_return, where other things will happen (namely,
+the stack will get popped and the answer will get calculated)
+
+Key:
+    * sp = stack pointer value
