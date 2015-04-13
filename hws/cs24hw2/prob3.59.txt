@@ -21,7 +21,6 @@ int switch_prob(int x, int n)
         result *= result;
         // Fall through
 
-    case 51:
     default:
         result = x + 10;
     }
