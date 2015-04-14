@@ -36,8 +36,13 @@ int switch_prob(int x, int n)
 8048426: mov    0xc(%ebp), %edx               # edx = n
 8048429: sub    $0x32, %edx                   # edx = edx - 50
 804842c: cmp    $0x5, %edx                    # updates flags as for edx - 5
-804842f: ja     8048448 <switch_prob+0x28>    # jump if greater (if edx > 5) to instr at M[8048448]. we get this behavior because operand has no prefix
-8048431: jmp    *0x80485d0(, %edx, 4)         # indirect jump, so jumps to M[0x80485d0 + %edx * 4] (a spot in the jump table)
+804842f: ja     8048448 <switch_prob+0x28>    # jump if greater (if edx > 5) to
+                                              # instr at M[8048448]. we get this
+                                              # behavior because operand has no
+                                              # prefix
+8048431: jmp    *0x80485d0(, %edx, 4)         # indirect jump, so jumps to
+                                              # M[0x80485d0 + %edx * 4]
+                                              # (a spot in the jump table)
                                                 if edx == 0, jumps to 0x08048438
                                                 if edx == 1, jumps to 0x08048448
                                                 if edx == 2, jumps to 0x08048438

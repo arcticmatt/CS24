@@ -10,13 +10,15 @@ gcd:
     jmp gcd_return      # And then we return
 gcd_continue:
     movl 8(%ebp), %eax  # eax = a
-    cltd                # Set up edx:eax for division by sign-extending eax into edx, creating edx:eax
+    cltd                # Set up edx:eax for division by sign-extending eax into
+                        # edx, creating edx:eax
     idivl 12(%ebp)      # eax = edx:eax / M[12 + ebp] = edx:eax / b = a / b
                         # edx = edx:eax mod M[12 + ebp] = a mod b
     pushl %edx          # Push remainder onto the stack
     pushl 12(%ebp)      # Push b onto the stack
     call gcd            # Make recursive call
-    addl $12, %esp      # Puts sp in position to pop stack back up to original ret addr
+    addl $12, %esp      # Puts sp in position to pop stack back up to original
+                        # ret addr
 gcd_return:
     movl %ebp, %esp     # Pop local stack
     popl %ebp           # Pop old base of frame

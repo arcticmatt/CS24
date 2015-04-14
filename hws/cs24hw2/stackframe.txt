@@ -1,3 +1,5 @@
+I'll assume the character limit doesn't apply here.
+
 Address     |               Value             |    Logical Role
 ----------------------------------------------------------------------------------------------------
 0x1008      arg1 = 3                          The function argument
@@ -11,7 +13,7 @@ Address     |               Value             |    Logical Role
 0xfec       PC of next instr (line 19)        To be used with the "ret" instr later, so that we jump
                                               to the code that calculates our answer
 0xfe8       %ebp = 0xff4                      The base pointer for the stack
-0xfe4       %eax = 1 (was 0)                  The function argument, which gets decremented down to 0
+0xfe4       %eax = 0                          The function argument, which gets decremented down to 0
 0xfe0       PC of next instr (line 19)        To be used with the "ret" instr later, so that we jump
                                               to the code that calculates our answer
 0xfdc       %ebp = 0xfe8                      The base pointer for the stack

@@ -1,7 +1,7 @@
 Practice Problem 3.6
 Suppose register %eax holds value x and %ecx holds value y. Fill in the table
-below with formulas indicating the value that will be stored in register %edx for
-each of the given assembly code instructions:
+below with formulas indicating the value that will be stored in register %edx
+for each of the given assembly code instructions:
 
 leal 6(%eax), %edx             6 + x
 leal (%eax, %ecx), %edx        x + y
