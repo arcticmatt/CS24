@@ -1,21 +1,22 @@
-I'll assume the character limit doesn't apply here.
+I'll assume the character limit doesn't apply here, because this isn't code and the answer
+format lends itself to a lengthwise table.
 
 Address     |               Value             |    Logical Role
 ----------------------------------------------------------------------------------------------------
 0x1008      arg1 = 3                          The function argument
-0x1004      ?                                 Ret Addr
+0x1004      ?                                 Ret Addr (to go back to where we were before fact was called)
 0x1000      %ebp = Caller's ebp               The base pointer for the stack
 0xffc       %eax = 2                          The function argument, which gets decremented down to 0
-0xff8       PC of next instr (line 19)        To be used with the "ret" instr later, so that we jump
-                                              to the code that calculates our answer
+0xff8       ? = PC of next instr (line 19)    To be used with the "ret" instr later, so that we jump
+                                              to the code that calculates our answer (fact_resume)
 0xff4       %ebp = 0x1000                     The base pointer for the stack
 0xff0       %eax = 1                          The function argument, which gets decremented down to 0
-0xfec       PC of next instr (line 19)        To be used with the "ret" instr later, so that we jump
-                                              to the code that calculates our answer
+0xfec       ? = PC of next instr (line 19)    To be used with the "ret" instr later, so that we jump
+                                              to the code that calculates our answer (fact_resume)
 0xfe8       %ebp = 0xff4                      The base pointer for the stack
 0xfe4       %eax = 0                          The function argument, which gets decremented down to 0
-0xfe0       PC of next instr (line 19)        To be used with the "ret" instr later, so that we jump
-                                              to the code that calculates our answer
+0xfe0       ? = PC of next instr (line 19)    To be used with the "ret" instr later, so that we jump
+                                              to the code that calculates our answer (fact_resume)
 0xfdc       %ebp = 0xfe8                      The base pointer for the stack
 
 
