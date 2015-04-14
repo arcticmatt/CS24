@@ -1,7 +1,18 @@
 1) What does the following assembly code do?
 
 movl 8(%ebp), %eax   # Moves a doubleword (4 byte) from M[8 + %ebp] into %eax.
-imull $3, %eax       # 32-bit signed multiplication. Multiplies the constant 3 by the value in the %eax register, and stores it in the %eax register.
+                     # (eax = x)
+imull $3, %eax       # 32-bit signed multiplication. Multiplies the constant 3
+                     # by the value in the %eax register, and stores it in
+                     # the %eax register (eax = 3 * eax)
 addl $12, %eax       # Adds the constant 12 to the contents of %eax.
-imull 8(%ebp), %eax  # 32-bit signed multiplication. Multiplies M[8 + %ebp] by the value in the %eax register, and stores it in the %eax register.
-subl $17, %eax       # Subtracts the constant 17 from the value in the %eax register and stores it in the %eax register.
+                     # (eax = eax + 12)
+imull 8(%ebp), %eax  # 32-bit signed multiplication. Multiplies M[8 + %ebp] by
+                     # the value in the %eax register, and stores it in the %eax
+                     # register. (eax = eax * x)
+subl $17, %eax       # Subtracts the constant 17 from the value in the %eax
+                     # register and stores it in the %eax register.
+                     # (eax = eax - 17)
+
+So, letting our single argument be called x, we have that the final result is
+(3 * x + 12) * x - 17 = 3 * x^2 + 12 * x - 17

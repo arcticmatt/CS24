@@ -12,11 +12,11 @@ ex:
 	.cfi_def_cfa_register 5
 	subl	$16, %esp
 	movl	12(%ebp), %eax
-	subl	16(%ebp), %eax # This is the - operation, where the two operands are b and c
-	imull	8(%ebp), %eax  # This is the * operation, where the two operands are a and (b - c)
+	subl	16(%ebp), %eax # The - operation, the two ops are b and c
+	imull	8(%ebp), %eax  # The * operation, the two ops are a and (b - c)
 	movl	%eax, %edx
 	movl	20(%ebp), %eax
-	addl	%edx, %eax     # This is the + operation, where the two operands are d and (a * (b - c))
+	addl	%edx, %eax     # The + operation, the two ops are d and a * (b - c)
 	movl	%eax, -4(%ebp)
 	movl	-4(%ebp), %eax
 	leave
