@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "gcd.h"
 
 int max(int x, int y);
 int min(int x, int y);
