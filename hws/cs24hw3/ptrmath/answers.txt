@@ -1,3 +1,70 @@
 Answers for the "Arrays, Pointer Arithmetic, and Structs" section of CS24 HW3:
 
+1) Here is some C code:
 
+char *p = malloc(16);            /* Allocates 16 bytes  */
+bzero(p, 16);                    /* Sets all bytes to 0 */
+
+*((int *) (p + 3)) = 0xDEADBEEF;
+
+*(((int *) p) + 3) = 0xCAFEBABE;
+
+After bzero, we have that p points to
+0000000000000000
+where each 0 represents a byte of all zeroes.
+
+(int *) (p + 3) gives us a pointer
+0000000000000000
+   ^
+to this integer. Then we set the value of that
+integer to 0xDEADBEEF. This gives us
+0 0 0 11011110 10101101 10111110 11101111 0 0 0 0 0 0 0 0 0,
+where now spaces separate bytes and each zero represents a byte of
+all zeroes.
+
+*(((int *) p) + 3) gives us a pointer
+0 0 0 11011110 10101101 10111110 11101111 0 0 0 0 0 0 0 0 0,
+                                                    ^
+to this integer. Then we set the value of that
+integer to 0xCAFEBABE. This gives us
+0 0 0 11011110 10101101 10111110 11101111 0 0 0 0 0 11001010 11111110
+    10111010 10111110.
+
+
+2) Here is a C struct declaration:
+
+typedef struct entry {
+    int id;             // Offset: 0 bytes   Size: 4 bytes
+    char code[5];       // Offset: 4 bytes   Size: 5 bytes
+    struct entry* next; // Offset: 12 bytes  Size: 4 bytes
+} entry;
+
+Scratch Work (01 means the 01st 4 byte cell):
+00: int id (4 bytes, takes up one spaces)
+01: char code[5] (5 bytes, takes up two spaces)
+03: struct entry* next (4 bytes b/c 32 bit machine, takes up one space);
+
+Look at the commented struct for the answer.
+
+
+3) Here is some C code using the previous struct declaration:
+
+entry *arr = malloc(10 * sizeof(entry));
+char *p = (char *) arr;  /* arr and p hold the same address */
+arr[4].code[3] = 'A';
+p[offset] = 'A';
+
+
+arr[4]
+brings us to the fifth entry. Since each entry is 16 bytes, this brings
+us 16 * 5 = 80 bytes forward.
+
+code[3]
+brings us to the fourth char. Since one char is one byte, this brings us
+4 * 1 = 4 more bytes forward. So overall, we have moved
+
+80 + 4 = 84 bytes forward.
+
+So, we have that if
+offset = 84,
+the last two lines of code will write the same byte.
