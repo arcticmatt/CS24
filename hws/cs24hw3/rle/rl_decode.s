@@ -45,8 +45,7 @@ rl_decode:
 find_space_loop:
         movzbl   (%ecx, %esi), %edx       # Moves byte into long
         addl    %edx, %ebx                # Add in the count, then move.
-                                          # bl is low 8 bits
-                                          # bl = bl + M[ecx + esi]
+                                          # ebx = ebx + M[ecx + esi]
                                           # b/c ecx is start of source array,
                                           # esi is loop variable
         add     $2, %esi                  # forward to the next count!
@@ -83,9 +82,8 @@ find_space_done:
 
 decode_loop:
         # Pull out the next [count][value] pair from the encoded data.
-        movzbl  (%ecx, %esi), %edx        # bh is the count of repetitions,
-                                          # high 8 bits of ebx
-                                          # bh = M[ecx + esi]
+        movzbl  (%ecx, %esi), %edx        # edx is the count of repetitions,
+                                          # edx = M[ecx + esi]
         mov     1(%ecx, %esi), %bl        # bl is the value to repeat,
                                           # low 8 bits of ebx
                                           # bl = [ecx + esi + 1]
@@ -94,12 +92,12 @@ write_loop:
         mov     %bl, (%eax, %edi)         # M[eax + edi] = bl. Remember that
                                           # eax stores
                                           # the start of our output buffer
-        dec     %edx                      # bh = bh - 1
+        dec     %edx                      # edx = edx - 1
         add     $1, %edi                  # edi = edi + 1, because this is
                                           # keeping place of where we write to
                                           # our output buffer
-        cmp     $0, %edx                  # Updates flags as for bh - 0
-        jg      write_loop                # if (bh > 0) then jump to write loop
+        cmp     $0, %edx                  # Updates flags as for edx - 0
+        jg      write_loop                # if (edx > 0) then jump to write loop
 
         add     $2, %esi                  # esi = esi + 2
 
