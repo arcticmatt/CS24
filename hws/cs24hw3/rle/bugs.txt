@@ -1,0 +1,50 @@
+A Record of Bugs Found in rl_decode()
+--------------------------------------
+Note: Line numbers are from original code.
+
+Line 44:
+The defect: One defect is that the desired length may exceed 255, but we are
+storing the length in one byte. Thus, this defect deters us from having the
+correct output length.
+
+The fix: Use ebx to keep track of count. Also, before adding the value at
+M[ecx + esi], move that value into a long so we are adding compatible types.
+
+Line 45:
+The defect: esi is being incremented by 1, which means we are iterating not only
+over the counts, but the characters themselves. Doing this will give us the
+wrong output length.
+
+The fix: Increment esi by 2.
+
+Line 59:
+The defect: call malloc changes the value of ecx, which we use later on to index
+our search of the source array. So clearly this defect disallows us from looping
+through the source array properly, which means we will not be able to decode
+the input.
+
+The fix: Push ecx before calling malloc, and pop it back afterwards.
+
+Line 72:
+The defect: When M[ecx + esi] = 255, bh overflows to -1, thus causing our
+decoding to malfunction. In other words, bh is too small to store the max
+count of repetitions.
+
+The fix: Use edx to store the count of repetitions.
+
+Line 77:
+The defect: After decreasing bh (which we changed to edx), we need to compare
+it with 0 so that we know whether or not to jump back to the write loop. As is,
+the buggy code is using outdated flags, and does not have the proper "if" logic.
+
+The fix: Add the line "cmp $0, %edx" after the "dec %edx" instruction.
+
+Line 77:
+The defect: When building the output array of decoded characters, we are
+always looking at the same index. This is because we never increment edi after
+setting it to 0. Thus, with this bug, the output array will not be built at all
+properly.
+
+The fix: edi should be incremented by 1 (because we are adding characters)
+everytime a new character is inserted to the output array. We can add this
+instruction after line 77, writing something like "add $1, %edi".

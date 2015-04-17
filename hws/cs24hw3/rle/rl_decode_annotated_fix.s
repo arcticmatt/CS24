@@ -37,41 +37,32 @@ rl_decode:
         xor     %ebx, %ebx                # %ebx = size required = 0
 
         # Find-space while-loop starts here...
-        cmp     12(%ebp), %esi            # Updates flags as for
-                                          # esi - length = 0 - length
-        jge     find_space_done           # if (-length >= 0) then jump to
-                                          # find_space_done
+        cmp     12(%ebp), %esi            # Updates flags as for esi - length = 0 - length
+        jge     find_space_done           # if (-length >= 0) then jump to find_space_done
 
 find_space_loop:
-        movzbl   (%ecx, %esi), %edx       # Moves byte into long
-        addl    %edx, %ebx                # Add in the count, then move.
+        add     (%ecx, %esi), %ebx        # Add in the count, then move.
                                           # bl is low 8 bits
                                           # bl = bl + M[ecx + esi]
-                                          # b/c ecx is start of source array,
-                                          # esi is loop variable
+                                          # b/c ecx is start of source array, esi is loop variable
         add     $2, %esi                  # forward to the next count!
 
-        cmp     12(%ebp), %esi            # Updates flags as for
-                                          # esi - length = i - length,
+        cmp     12(%ebp), %esi            # Updates flags as for esi - length = i - length,
                                           # where i is the loop variable
-        jl      find_space_loop           # if (i - length < 0) then jump to
-                                          # find_space_loop
+        jl      find_space_loop           # if (i - length < 0) then jump to find_space_loop
 
 find_space_done:
 
         # Write the length of the decoded output to the output-variable
-        mov     16(%ebp), %edx    # edx = last pointer-argument to
-                                  # function = start of output_length
+        mov     16(%ebp), %edx    # edx = last pointer-argument to function
         mov     %ebx, (%edx)      # store computed size into this location
                                   # M[edx = output pointer] = ebx
 
-        push    %ecx
         # Allocate memory for the decoded data using malloc.
         # Pointer to allocated memory will be returned in %eax.
         push    %ebx              # Number of bytes to allocate...
         call    malloc
         add     $4, %esp          # Clean up stack after call.
-        pop     %ecx
 
         # Now, decode the data from the input buffer into the output buffer.
         xor     %esi, %esi        # esi = 0
@@ -83,29 +74,24 @@ find_space_done:
 
 decode_loop:
         # Pull out the next [count][value] pair from the encoded data.
-        movzbl  (%ecx, %esi), %edx        # bh is the count of repetitions,
-                                          # high 8 bits of ebx
+        mov     (%ecx, %esi), %bh         # bh is the count of repetitions, high 8 bits of ebx
                                           # bh = M[ecx + esi]
-        mov     1(%ecx, %esi), %bl        # bl is the value to repeat,
-                                          # low 8 bits of ebx
+        mov     1(%ecx, %esi), %bl        # bl is the value to repeat, low 8 bits of ebx
                                           # bl = [ecx + esi + 1]
 
 write_loop:
-        mov     %bl, (%eax, %edi)         # M[eax + edi] = bl. Remember that
-                                          # eax stores
+        mov     %bl, (%eax, %edi)         # M[eax + edi] = bl. Remember that eax stores
                                           # the start of our output buffer
-        dec     %edx                      # bh = bh - 1
-        add     $1, %edi                  # edi = edi + 1, because this is
-                                          # keeping place of where we write to
-                                          # our output buffer
-        cmp     $0, %edx                  # Updates flags as for bh - 0
-        jg      write_loop                # if (bh > 0) then jump to write loop
+        dec     %bh                       # bh = bh - 1
+        add     $1, edi                   # edi = edi + 1, because this is keeping place
+                                          # of where we write to our output buffer
+        cmp     $0, %bh                   # Updates flags as for bh - 0
+        jnz     write_loop                #
 
         add     $2, %esi                  # esi = esi + 2
 
         cmp     12(%ebp), %esi            # Updates flags as for esi - length
-        jl      decode_loop               # if (esi - length < 0) jump to
-                                          # decode_loop
+        jl      decode_loop               # if (esi - length < 0) jump to decode_loop
 
 decode_done:
 
