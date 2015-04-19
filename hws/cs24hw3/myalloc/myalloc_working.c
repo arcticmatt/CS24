@@ -95,6 +95,7 @@ unsigned char *myalloc(int size) {
         candidatesize = -1 * *((int *) candidateptr);
         printf("candidatesize = %d at candidateptr %p\n", candidatesize, candidateptr);
         if (candidatesize >= totalsize && candidatesize <= bestsize) {
+            printf("yo\n");
             bestptr = candidateptr;
             bestsize = candidatesize;
         }
@@ -109,16 +110,14 @@ unsigned char *myalloc(int size) {
         if (bestsize - totalsize > SPLIT_CRITERIA) {
             printf("Splitting the block\n");
             printf("First block has size %d\n", totalsize);
-            // First Block. Make sure to write a positive size for header and
-            // footer, because the first block is used.
+            // First Block
             // Write header that contains the size of the entire memory chunk
             *((int *) bestptr) = totalsize;
             // Write footer (to last 4 bytes) that contains the size of the entire
             // memory chunk
             *((int *) (bestptr + size + HEADER_SIZE)) = totalsize;
 
-            // Second block. Make sure to write a negative size for header and
-            // footer, beause the second block is free..
+            // Second block
             int second_block_size = bestsize - totalsize;
             printf("Second block has size %d\n", second_block_size);
             // Header
@@ -127,12 +126,8 @@ unsigned char *myalloc(int size) {
             *((int *) (bestptr + totalsize + second_block_size - \
                         FOOTER_SIZE)) = -second_block_size;
         } else {
-            /*
-             * If we don't split the block, we just need to modify the sign of
-             * the size, because we see no need to change the actual magnitude.
-             * More specifically, we want to make the sign positive, because the
-             * block is being used now.
-             */
+            // If we don't split the block, we just need to modify the sign of
+            // the size, because we see no need to change the actual magnitude
             // Write header that contains the size of the entire memory chunk
             *((int *) bestptr) = bestsize;
             // Write footer (to last 4 bytes) that contains the size of the entire
@@ -166,7 +161,7 @@ void myfree(unsigned char *oldptr) {
         currsize = *((int *) afterptr);
         if (currsize >= 0)
             break;
-        printf("Coalescing forward with currsize = %d\n", currsize);
+        /*printf("Coalescing forward with currsize = %d\n", currsize);*/
         totalsize += currsize * -1;
         afterptr += currsize * -1;
     }
@@ -178,8 +173,8 @@ void myfree(unsigned char *oldptr) {
         prev_total_size = *((int *) prev_footer_ptr);
         if (prev_total_size >= 0)
             break;
-        printf("Coalescing backward with prev_total_size = %d\n", \
-              prev_total_size);
+        /*printf("Coalescing backward with prev_total_size = %d\n", \*/
+              /*prev_total_size);*/
         totalsize += prev_total_size * -1;
         prev_footer_ptr -= prev_total_size * -1;
         headerptr -= prev_total_size * -1;
