@@ -1,0 +1,69 @@
+a) Describe what your allocator does in each of the following error cases.
+What happens if a programmer calls myfree() on:
+
+i) An address that did not originate from myalloc()?
+
+If a programmer calls myfree() on an address that did not originate from
+myalloc(), my allocator will segfault because it does not have access to that
+location in memory. More specifically, in myfree(), I get the value at the
+passed-in pointer (decremented by 4). But if an address is passed in that
+did not originate from myalloc(), this will segfault because I will not have
+access to this address and will not be able to get the value.
+
+ii) An address that is contained within a memory block returned by myalloc()?
+For example: a = myalloc(10); myfree(a + 5);
+
+If a programmer calls myfree() on an address that is contained within a memory
+block returned by myalloc(), totalsize will be initialized to a random value b/c
+we will just be accessing some random point in memory, instead of some point in
+memory whose value we have set. Then, when we coalesce forward, we could
+segfault by trying to access memory that is out of our range. Further, when
+we try to set the value of the footer calling
+*((int *) (headerptr + totalsize - 4)),
+we might segfault by trying to access memory that is out of our range. Or,
+we could just be corrupting data, because we are writing to the wrong place
+in memory because totalsize is some random value. Finally, if we don't segfault,
+we end up writing the random totalsize value to the header of the block. Unless
+this actually leads to another header (very unlikely), this will screw up the
+block traversal algorithm in myalloc(), because we will end up assigning
+candidatesize to a value in the middle of a chunk of memory instead of the value
+of a header. So that also might lead to a segfault.
+
+iii) An address that has already been freed?
+For example: a = myalloc(10); myfree(a); myfree(a);
+
+Here we have two cases. In the case where we do not coalesce with adjacent
+blocks, we have that we write the positive size of the block to the header
+of the block, signifying that the block is allocated (even though it is free).
+So now we are wasting space, because when we are allocating memory in myalloc()
+we will skip over this free block, falsely thinking it is being used. Notice
+that since totalsize is negative, we do not change the footer value, so this
+block will still get coalesced by the block ahead of it. However, this means
+that we will try writing to some value below headerptr instead of to some value
+above headerptr, which could corrupt data or even cause a segfault if the
+address is out of range.
+
+In the case where we do coalesce with adjacent blocks, we get three cases.
+The first case is when the absolute value of totalsize in myfree() is greater
+than or equal to the sum of the sizes of the blocks we coalesce with. Then,
+we have that we will write a positive size to the header of the
+block, signifying that the block is allocated. Then we get the same problem as
+above. The second case is when the absolute value of totalsize in myfree() is
+less than the sum of the sizes of the blocks we coalesce with. Then, we have
+that we will write a negative size to the header of the block,
+signifying that the block is free. We'll also write that same negative size to
+some place in the middle of the block, corrupting the data.
+However, the magnitude of the size will be incorrect; more specifically, the
+block will have more space than is indicated by the size on the header.
+This will cause our block traversal algorithm in myalloc() to screw up,
+because we will access a chunk of memory in the middle of the block and read it
+as the header. Notice that one bug that pops up is that when we are coalescing
+foward, we move in the wrong direction, because totalsize is negative instead of
+positive. This will cause currsize to be some "random" number that depends on
+what is written in the previous block. Given my code, this could cause afterptr
+to go out of range (> mem + MEMORY_SIZE), which would cause a segfault because
+we would be trying to access memory we did not have access to. We could also get
+a segfault when trying to set the header with
+*((int *) (headerptr + totalsize - 4)), as totalsize could be some large
+(or really negative) number that causes the address to be out of range.
+Otherwise, we get one of the other two cases.

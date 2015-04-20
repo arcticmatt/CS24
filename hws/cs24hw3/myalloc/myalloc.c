@@ -24,18 +24,14 @@
 int MEMORY_SIZE;
 unsigned char *mem;
 
-
-/* TODO:  The unacceptable allocator uses an external "free-pointer" to track
- *        where free memory starts.  If your allocator doesn't use this
- *        variable, get rid of it.
- *
- *        You can declare data types, constants, and statically declared
- *        variables for managing your memory pool in this section too.
- */
-static unsigned char *freeptr;
+// Size of the header in bytes; used to store total size of memory chunk
 static unsigned const int HEADER_SIZE = 4;
+// Size of the footer in bytes; used to store total size of memory chunk
 static unsigned const int FOOTER_SIZE = 4;
-static unsigned const int SPLIT_CRITERIA = 100;
+// Determined this constant by seeing what gives a relatively good memory
+// utilization percentage. If we are allocating memory into a block and there is
+// at least this much free space left, we will split the block.
+static unsigned const int SPLIT_CRITERIA = 150;
 
 
 /*!
@@ -61,10 +57,11 @@ void init_myalloc() {
         abort();
     }
 
-    /* TODO:  You can initialize the initial state of your memory pool here. */
-    /*freeptr = mem;*/
-
-    printf("MEMORY_SIZE = %d\n", MEMORY_SIZE);
+    /*
+     * Initialize state of memory pool by writing an initial header and footer.
+     * For all reasonably sized first allocations, this large block will be
+     * split up upon the first allocation.
+     */
     // Write header that contains the size of the entire memory chunk
     *((int *) mem) = -MEMORY_SIZE;
     // Write footer (to last 4 bytes) that contains the size of the entire
@@ -76,24 +73,30 @@ void init_myalloc() {
 /*!
  * Attempt to allocate a chunk of memory of "size" bytes.  Return 0 if
  * allocation fails.
+ *
+ * Time Complexity: O(k) where k is the number of blocks. This is because
+ * we use a best fit algorithm, which checks all blocks to find the free block
+ * that fits the size best. Thus we must iterate over all k blocks to find the
+ * best free block. All other operations get put into the big O (splitting,
+ * changing the header and footer, etc.).
  */
 unsigned char *myalloc(int size) {
-    int totalsize = size + HEADER_SIZE + FOOTER_SIZE;
-
     printf("Seeking through memory for unused blocks\n");
+
     /*
-     * After freeptr runs to the edge of our memory pool, we will use
-     * a BEST FIT placement strategy to traverse the sequence of blocks.
+     * We will use a BEST FIT placement strategy to traverse the sequence of
+     * blocks.
      */
+    int totalsize = size + HEADER_SIZE + FOOTER_SIZE;
     unsigned char *bestptr = 0;
     unsigned char *candidateptr = mem;
     int candidatesize = 0;
     int bestsize = MEMORY_SIZE;
+    // Find best fit block
     while (candidateptr < mem + MEMORY_SIZE) {
         // Multiply by -1 because free blocks have -(size) in the header,
         // used blocks have just size in the header
         candidatesize = -1 * *((int *) candidateptr);
-        printf("candidatesize = %d at candidateptr %p\n", candidatesize, candidateptr);
         if (candidatesize >= totalsize && candidatesize <= bestsize) {
             bestptr = candidateptr;
             bestsize = candidatesize;
@@ -101,10 +104,7 @@ unsigned char *myalloc(int size) {
         candidateptr += abs(candidatesize);
     }
 
-    printf("here with bestpt = %p\n", bestptr);
     if (bestptr != NULL) {
-        printf("Here with bestptr = %p of size %d for block of size %d\n", \
-                bestptr, bestsize, totalsize);
         // See if we want to split the block
         if (bestsize - totalsize > SPLIT_CRITERIA) {
             printf("Splitting the block\n");
@@ -141,23 +141,39 @@ unsigned char *myalloc(int size) {
         }
         return (unsigned char *) (bestptr + HEADER_SIZE);
     } else {
-        fprintf(stderr, "myalloc: cannot service request of size %d with"
-                " %d bytes allocated\n", size, (freeptr - mem));
+        // Allocation failed
+        fprintf(stderr, "myalloc: cannot service request of size %d\n", \
+                size);
         return (unsigned char *) 0;
     }
 }
 
 
-/*!
+/*
  * Free a previously allocated pointer.  oldptr should be an address returned by
  * myalloc().
+ *
+ * Here is the time complexity of each operation in this method:
+ *
+ * Deallocation: O(1). Deallocation just involves writing a number to the header
+ * and footer of the block we are freeing. Since we know exactly where the
+ * header and footer are in memory, these operations are constant time.
+ *
+ * Coalescing: O(1). Coalescing involves coalescing all blocks in front of the
+ * block we are freeing and coalescing all blocks before the block we are
+ * freeing. But this means that, at worst, we need to coalesce one block in
+ * front and one block before. We will never run into the situation where we
+ * have to coalesce multiple blocks in front or multiple blocks behind because
+ * those blocks would already have been coalesced. So this means coalescing
+ * is bounded above by coalescing one block in front and one block behind,
+ * which just involves dereferencing a few pointers and adding some numbers.
+ * So coalescing is constant time.
  */
 void myfree(unsigned char *oldptr) {
-
     unsigned char *headerptr = (unsigned char *) (oldptr - HEADER_SIZE);
     int totalsize = *((int *) headerptr);
 
-    printf("In myfree, with block of totalsize %d\n", totalsize);
+    printf("===== In myfree, with block of totalsize %d =====\n", totalsize);
 
     // Coalesce with free blocks after the just-freed block
     unsigned char *afterptr = (unsigned char *) (headerptr + totalsize);
@@ -185,8 +201,10 @@ void myfree(unsigned char *oldptr) {
         headerptr -= prev_total_size * -1;
     }
 
+    // Free the coalesced block by updating the header and footer. This is
+    // the constant time deallocation.
     *((int *) headerptr) = totalsize * -1;
     *((int *) (headerptr + totalsize - 4)) = totalsize * -1;
 
-    printf("set the size to %d\n", *((int *) headerptr));
+    printf("Set the size to %d\n", *((int *) headerptr));
 }
