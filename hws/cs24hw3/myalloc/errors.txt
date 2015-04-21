@@ -89,6 +89,7 @@ byte (after doing the necessary calculations to move it to the header).
 If it is not 1 or 0, we know we have gotten passed in a faulty pointer, and we
 can flag the invalid use and terminate.
 
-To fix the third case, we can add a check to make sure that totalsize is
-positive (check that we are freeing a block that is actually allocated) before
-we proceed. If totalsize is negative, we can flag the invalid use and terminate.
+To fix the third case, we can add a check to make sure that totalsize (ln 174)
+is positive (check that we are freeing a block that is actually allocated)
+before we proceed. If totalsize is negative, we can flag the invalid use and
+terminate.
