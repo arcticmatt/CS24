@@ -67,3 +67,28 @@ a segfault when trying to set the header with
 *((int *) (headerptr + totalsize - 4)), as totalsize could be some large
 (or really negative) number that causes the address to be out of range.
 Otherwise, we get one of the other two cases.
+
+
+b) Describe how to implement an allocator that would be more robusts to the
+kinds of abuses suggested in the previous question. By "more robust," we mean
+that the program should flag the invalid use and then terminate, identifying the
+offending myfree() call.
+
+To check for the first case, we could simply check whether the passed in oldptr
+is in the region mem <= x < mem + MEMORY_SIZE. If it is not, we know that oldptr
+is an address that did not originate from myalloc(), and we can flag the invalid
+use.
+
+To fix the second case, we could slightly change how we implement the header and
+footer. Instead of the header and footer containing the positive size when the
+block is full and the negative size when the block is empty (4 bytes), we could
+have the first byte of the header and foot contain a 1 when the block is full
+and a 0 when the block is empty, and the next 4 bytes contain the size. Then,
+when we read pointers in myfree(), we can just intially just read the first
+byte (after doing the necessary calculations to move it to the header).
+If it is not 1 or 0, we know we have gotten passed in a faulty pointer, and we
+can flag the invalid use and terminate.
+
+To fix the third case, we can add a check to make sure that totalsize is
+positive (check that we are freeing a block that is actually allocated) before
+we proceed. If totalsize is negative, we can flag the invalid use and terminate.
