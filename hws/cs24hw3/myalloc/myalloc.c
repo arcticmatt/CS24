@@ -105,7 +105,10 @@ unsigned char *myalloc(int size) {
     }
 
     if (bestptr != NULL) {
-        // See if we want to split the block
+        /*
+         * See if we want to split the block. Only split if there is a decent
+         * amount of space left - this lessens fragmentation.
+         */
         if (bestsize - totalsize > SPLIT_CRITERIA) {
             printf("Splitting the block\n");
             printf("First block has size %d\n", totalsize);
@@ -150,8 +153,8 @@ unsigned char *myalloc(int size) {
 
 
 /*
- * Free a previously allocated pointer.  oldptr should be an address returned by
- * myalloc().
+ * Free a previously allocated pointer. oldptr should be an address returned by
+ * myalloc(). Coalesce adjacent blocks to get rid of false fragmentation.
  *
  * Here is the time complexity of each operation in this method:
  *
