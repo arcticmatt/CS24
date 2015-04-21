@@ -61,7 +61,7 @@ as the header. Notice that one bug that pops up is that when we are coalescing
 foward, we move in the wrong direction, because totalsize is negative instead of
 positive. This will cause currsize to be some "random" number that depends on
 what is written in the previous block. Given my code, this could cause afterptr
-to go out of range (> mem + MEMORY_SIZE), which would cause a segfault because
+to go out of range (>= mem + MEMORY_SIZE), which would cause a segfault because
 we would be trying to access memory we did not have access to. We could also get
 a segfault when trying to set the header with
 *((int *) (headerptr + totalsize - 4)), as totalsize could be some large
