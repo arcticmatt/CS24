@@ -1,6 +1,7 @@
 A Record of Bugs Found in rl_decode()
 --------------------------------------
-Note: Line numbers are from original code.
+Note: Line numbers are from original code (rl_decode_orig.s). For the actual
+fixes with comments, view rl_decode.s.
 
 Line 44:
 The defect: One defect is that the desired length may exceed 255, but we are
