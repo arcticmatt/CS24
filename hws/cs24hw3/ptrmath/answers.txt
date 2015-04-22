@@ -10,25 +10,23 @@ bzero(p, 16);                    /* Sets all bytes to 0 */
 *(((int *) p) + 3) = 0xCAFEBABE;
 
 After bzero, we have that p points to
-0000000000000000
-where each 0 represents a byte of all zeroes.
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+where each 00 represents a byte in hex.
 
 (int *) (p + 3) gives us a pointer
-0000000000000000
-   ^
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+         ^
 to this integer. Then we set the value of that
 integer to 0xDEADBEEF. This gives us
-0 0 0 11011110 10101101 10111110 11101111 0 0 0 0 0 0 0 0 0,
-where now spaces separate bytes and each zero represents a byte of
-all zeroes.
+00 00 00 EF BE AD DE 00 00 00 00 00 00 00 00 00
+because we are on a little-endian system.
 
 *(((int *) p) + 3) gives us a pointer
-0 0 0 11011110 10101101 10111110 11101111 0 0 0 0 0 0 0 0 0,
-                                                    ^
+00 00 00 EF BE AD DE 00 00 00 00 00 00 00 00 00
+                                    ^
 to this integer. Then we set the value of that
 integer to 0xCAFEBABE. This gives us
-0 0 0 11011110 10101101 10111110 11101111 0 0 0 0 0 11001010 11111110
-    10111010 10111110.
+00 00 00 EF BE AD DE 00 00 00 00 00 BE BA FE CA
 
 
 2) Here is a C struct declaration:
@@ -44,8 +42,8 @@ Scratch Work (01 means the 01st 4 byte cell):
 01: char code[5] (5 bytes, takes up two spaces)
 03: struct entry* next (4 bytes b/c 32 bit machine, takes up one space);
 
-Look at the commented struct for the answer.
-
+Total size of struct = 16 bytes
+Unused bytes = 3 bytes (code[5] takes up 8 byte space, only uses 5 bytes)
 
 3) Here is some C code using the previous struct declaration:
 
@@ -57,14 +55,15 @@ p[offset] = 'A';
 
 arr[4]
 brings us to the fifth entry. Since each entry is 16 bytes, this brings
-us 16 * 5 = 80 bytes forward.
+us 16 * 4 = 64 bytes forward.
 
 code[3]
-brings us to the fourth char. Since one char is one byte, this brings us
-4 * 1 = 4 more bytes forward. So overall, we have moved
+brings us to the fourth char. Since one char is one byte, and since code has an
+offset of 4 bytes, this brings us
+4 + 3 * 1 = 7 more bytes forward. So overall, we have moved
 
-80 + 4 = 84 bytes forward.
+64 + 7 = 71 bytes forward.
 
 So, we have that if
-offset = 84,
+offset = 71,
 the last two lines of code will write the same byte.
