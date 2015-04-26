@@ -2,7 +2,7 @@ CFLAGS = -g -O0
 
 
 shapeinfo : shapes.o shapeinfo.o
-	gcc $(LDFLAGS) -o $@ $^
+	gcc $(LDFLAGS) -lm -o $@ $^
 
 # dependencies on header files
 shapes.c : shapes.h
