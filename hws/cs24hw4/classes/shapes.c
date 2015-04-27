@@ -53,7 +53,7 @@ void Shape_class_init(Shape_Class *class) {
 void Shape_init(Shape_Data *this, Shape_Class *class, float D) {
     /* Initialize Shape_Class and density */
     this->class = class;
-    this->density = D;
+    Shape_setDensity(this, D);
 }
 
 
@@ -108,9 +108,7 @@ void Box_init(Box_Data *this, Box_Class *class,
     // Call superconstructor to initialize class info and density
     Shape_init((Shape_Data *) this, (Shape_Class *) class, D);
     // Initialize box specific data members
-    this->length = L;
-    this->width = W;
-    this->height = H;
+    Box_setSize(this, L, W, H);
 }
 
 
@@ -174,7 +172,7 @@ void Sphere_init(Sphere_Data *this, Sphere_Class *class, float R, float D) {
     // Call superconstructor to initialize class info and density
     Shape_init((Shape_Data *) this, (Shape_Class *) class, D);
     // Initialize sphere specific data members
-    this->radius = R;
+    Sphere_setRadius(this, R);
 }
 
 
@@ -233,8 +231,7 @@ void Cone_init(Cone_Data *this, Cone_Class *class, float BR, float H, float D) {
     // Call superconstructor to initialize class info and density
     Shape_init((Shape_Data *) this, (Shape_Class *) class, D);
     // Initialize cone specific data members
-    this->base_radius = BR;
-    this->height = H;
+    Cone_setBaseHeight(this, BR, H);
 }
 
 
