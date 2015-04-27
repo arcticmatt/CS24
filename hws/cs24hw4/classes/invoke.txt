@@ -13,7 +13,9 @@ Using Box as an example...
 pushl 8(%ebp) # Push function pointer, which is
               # float (*getVolume)(Box_Data *this)
               # as found in
-              # Box_Class
+              # Box_Class.
+              # Assuming the function pointer is 4 bytes because its just a
+              # pointer
 call          # This will call the getVolume function, which will presumably
               # call ret to return back to the callee
 popl          # Clean up the stack
