@@ -33,6 +33,11 @@ void mark_value(Value *v);
 void mark_lambda(Lambda *f);
 void mark_eval_stack(PtrStack *eval_stack);
 
+/* Sweeping functions */
+void sweep_values();
+void sweep_lambdas();
+void sweep_environments();
+
 
 /*========================================================*
  * TODO:  Declarations of your functions might go here... *
@@ -221,6 +226,10 @@ void free_environment(Environment *env) {
     free(env);
 }
 
+/*!
+ * This function marks the passed-in environment, its parent environment (if
+ * non-null), and the bindings of the passed-in environment.
+ */
 void mark_environment(Environment *env) {
     // If already marked, return
     if (env->marked == 1)
@@ -240,6 +249,11 @@ void mark_environment(Environment *env) {
     env->marked = 1;
 }
 
+/*!
+ * This function marks the passed-in value, making extra calls if the value
+ * is of the type T_Lambda or T_ConsPair (a call to mark_lambda or recursive
+ * calls, respectively).
+ */
 void mark_value(Value *v) {
     // If already marked, return
     if (v->marked == 1)
@@ -258,15 +272,18 @@ void mark_value(Value *v) {
     v->marked = 1;
 }
 
+/*!
+ * This function marks the passed-in lambda, the lambda's parent environment,
+ * and (if the lambda is an interpreted lambda) the list of args and the body
+ * values.
+ */
 void mark_lambda(Lambda *f) {
     // If already marked, return
     if (f->marked == 1)
         return;
 
-    // Lambdas have pointers to their parent env. If the env has not been marked
-    // yet, mark it
-    if (f->parent_env->marked == 0)
-        mark_environment(f->parent_env);
+    // Lambdas have pointers to their parent env. Mark it.
+    mark_environment(f->parent_env);
 
     // If the lambda is an interpreted lambda (not native), we need to mark
     // the list of args (arg_spec) and the body (body) values
@@ -279,6 +296,14 @@ void mark_lambda(Lambda *f) {
     f->marked = 1;
 }
 
+/*!
+ * This function goes through the evaluation stack and marks all the evaluation
+ * contexts that the stack stores. Marking an evaluation context involves
+ * marking the current_env, expression, and child_eval_result associated
+ * with the evaluation context. It also involves marking the local_vals
+ * PtrVector associated with the evaluation context; to do this, we need to
+ * loop through the PtrVector and mark each value.
+ */
 void mark_eval_stack(PtrStack *eval_stack) {
     int i;
     int j;
@@ -296,6 +321,11 @@ void mark_eval_stack(PtrStack *eval_stack) {
         Value *expr = ctx->expression;
         if (expr != NULL)
             mark_value(expr);
+
+        // Mark the child_eval_result, if not null
+        Value *child_eval_result = ctx->child_eval_result;
+        if (child_eval_result != NULL)
+            mark_value(child_eval_result);
 
         // Loop through local vals and mark all the values
         PtrVector *local_vals = &ctx->local_vals;
