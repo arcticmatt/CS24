@@ -34,15 +34,9 @@ void mark_lambda(Lambda *f);
 void mark_eval_stack(PtrStack *eval_stack);
 
 /* Sweeping functions */
+void sweep_environments();
 void sweep_values();
 void sweep_lambdas();
-void sweep_environments();
-
-
-/*========================================================*
- * TODO:  Declarations of your functions might go here... *
- *========================================================*/
-
 
 /*!
  * A growable vector of pointers to all Value structs that are currently
@@ -235,6 +229,9 @@ void mark_environment(Environment *env) {
     if (env->marked == 1)
         return;
 
+    // Mark the passed-in env
+    env->marked = 1;
+
     int i;
 
     // Mark parent env if it is non-null and not marked
@@ -244,9 +241,6 @@ void mark_environment(Environment *env) {
     // Now go through variable bindings of env and mark all those
     for (i = 0; i < env->num_bindings; i++)
         mark_value(env->bindings[i].value);
-
-    // Actually mark the passed-in env
-    env->marked = 1;
 }
 
 /*!
@@ -259,6 +253,9 @@ void mark_value(Value *v) {
     if (v->marked == 1)
         return;
 
+    // Mark the passed-in value
+    v->marked = 1;
+
     if (v->type == T_Lambda) {
         // Mark the lambda function
         mark_lambda(v->lambda_val);
@@ -267,9 +264,6 @@ void mark_value(Value *v) {
         mark_value(v->cons_val.p_car);
         mark_value(v->cons_val.p_cdr);
     }
-    // All other types are either char *, int, or float, so we can just
-    // mark the passed-in value and be done
-    v->marked = 1;
 }
 
 /*!
@@ -282,6 +276,9 @@ void mark_lambda(Lambda *f) {
     if (f->marked == 1)
         return;
 
+    // Mark all lambdas, whether they are native or interpreted
+    f->marked = 1;
+
     // Lambdas have pointers to their parent env. Mark it.
     mark_environment(f->parent_env);
 
@@ -291,9 +288,6 @@ void mark_lambda(Lambda *f) {
         mark_value(f->arg_spec);
         mark_value(f->body);
     }
-
-    // Mark all lambdas, whether they are native or interpreted
-    f->marked = 1;
 }
 
 /*!
@@ -445,17 +439,25 @@ void collect_garbage() {
 #endif
 
     /*==========================================================*
-     * TODO:  Implement mark-and-sweep garbage collection here! *
+     * Mark-and-sweep garbage collection
      *                                                          *
-     * Mark all objects referenceable from either the global    *
-     * environment, or from the evaluation stack.  Then sweep   *
+     * Marks all objects referenceable from either the global   *
+     * environment, or from the evaluation stack. Then sweeps   *
      * through all allocated objects, freeing unmarked objects. *
      *==========================================================*/
 
     global_env = get_global_environment();
     eval_stack = get_eval_stack();
 
-    /* ... TODO ... */
+    /* Mark everything */
+    mark_environment(global_env);
+    mark_eval_stack(eval_stack);
+
+    /* Sweep everything */
+    sweep_environments();
+    sweep_values();
+    sweep_lambdas();
+
 
 #ifndef ALWAYS_GC
     /* If we are still above the maximum allocation size, increase it. */
