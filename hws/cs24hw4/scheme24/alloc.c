@@ -337,6 +337,87 @@ void mark_eval_stack(PtrStack *eval_stack) {
     }
 }
 
+/*!
+ * This function sweeps through the vector of allocated environments, freeing
+ * ones that are no longer reachable. It sets the entries it frees to NULL,
+ * then compacts the vector at the end by removing those NULL entries.
+ */
+void sweep_environments() {
+    int i;
+    Environment *env;
+
+    // Loop through all allocated environments
+    for (i = 0; i < allocated_environments.size; i++) {
+        env = (Environment *) pv_get_elem(&allocated_environments, i);
+
+        if (env->marked != 0) {
+            // If env is marked, unmark it
+            env->marked = 0;
+        } else {
+            // If env is marked, delete it and set pointer to NULL
+            free_environment(env);
+            pv_set_elem(&allocated_environments, i, NULL);
+        }
+    }
+
+    // Remove all NULL entries created from deleting objects
+    pv_compact(&allocated_environments);
+}
+
+/*!
+ * This function sweeps through the vector of allocated values, freeing
+ * ones that are no longer reachable. It sets the entries it frees to NULL,
+ * then compacts the vector at the end by removing those NULL entries.
+ */
+void sweep_values() {
+    int i;
+    Value *v;
+
+    // Loop through all allocated values
+    for (i = 0; i < allocated_values.size; i++) {
+        v = (Value *) pv_get_elem(&allocated_values, i);
+
+        if (v->marked != 0) {
+            // If value is marked, unmark it
+            v->marked = 0;
+        } else {
+            // If value is marked, delete it and set pointer to NULL
+            free_value(v);
+            pv_set_elem(&allocated_values, i, NULL);
+        }
+    }
+
+    // Remove all NULL entries created from deleting objects
+    pv_compact(&allocated_values);
+}
+
+/*!
+ * This function sweeps through the vector of allocated lambdas, freeing
+ * ones that are no longer reachable. It sets the entries it frees to NULL,
+ * then compacts the vector at the end by removing those NULL entries.
+ */
+void sweep_lambdas() {
+    int i;
+    Lambda *func;
+
+    // Loop through all allocated lambdas
+    for (i = 0; i < allocated_lambdas.size; i++) {
+        func = (Lambda *) pv_get_elem(&allocated_lambdas, i);
+
+        if (func->marked != 0) {
+            // If lambda is marked, unmark it
+            func->marked = 0;
+        } else {
+            // If lambda is marked, delete it and set pointer to NULL
+            free_lambda(func);
+            pv_set_elem(&allocated_lambdas, i, NULL);
+        }
+    }
+
+    // Remove all NULL entries created from deleting objects
+    pv_compact(&allocated_lambdas);
+}
+
 
 /*!
  * This function performs the garbage collection for the Scheme interpreter.
