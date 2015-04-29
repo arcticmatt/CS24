@@ -7,7 +7,7 @@
 
 
 /*! Change to #define to output garbage-collector statistics. */
-#undef GC_STATS
+#define GC_STATS
 
 /*!
  * Change to #undef to cause the garbage collector to only run when it has to.
@@ -26,6 +26,12 @@
 void free_value(Value *v);
 void free_lambda(Lambda *f);
 void free_environment(Environment *env);
+
+/* Marking functions */
+void mark_environment(Environment *env);
+void mark_value(Value *v);
+void mark_lambda(Lambda *f);
+void mark_eval_stack(PtrStack *eval_stack);
 
 
 /*========================================================*
@@ -91,14 +97,14 @@ void print_alloc_stats(FILE *f) {
  * This helper function returns the amount of memory currently being used by
  * garbage-collected objects.  It is NOT the total amount of memory being used
  * by the interpreter!
- */ 
+ */
 long allocation_size() {
     long size = 0;
-    
+
     size += sizeof(Value) * allocated_values.size;
     size += sizeof(Lambda) * allocated_lambdas.size;
     size += sizeof(Value) * allocated_environments.size;
-    
+
     return size;
 }
 
@@ -215,6 +221,92 @@ void free_environment(Environment *env) {
     free(env);
 }
 
+void mark_environment(Environment *env) {
+    // If already marked, return
+    if (env->marked == 1)
+        return;
+
+    int i;
+
+    // Mark parent env if it is non-null and not marked
+    if (env->parent_env != NULL)
+        mark_environment(env->parent_env);
+
+    // Now go through variable bindings of env and mark all those
+    for (i = 0; i < env->num_bindings; i++)
+        mark_value(env->bindings[i].value);
+
+    // Actually mark the passed-in env
+    env->marked = 1;
+}
+
+void mark_value(Value *v) {
+    // If already marked, return
+    if (v->marked == 1)
+        return;
+
+    if (v->type == T_Lambda) {
+        // Mark the lambda function
+        mark_lambda(v->lambda_val);
+    } else if (v->type == T_ConsPair) {
+        // Recursively call mark_value for the values stored in the cons pair
+        mark_value(v->cons_val.p_car);
+        mark_value(v->cons_val.p_cdr);
+    }
+    // All other types are either char *, int, or float, so we can just
+    // mark the passed-in value and be done
+    v->marked = 1;
+}
+
+void mark_lambda(Lambda *f) {
+    // If already marked, return
+    if (f->marked == 1)
+        return;
+
+    // Lambdas have pointers to their parent env. If the env has not been marked
+    // yet, mark it
+    if (f->parent_env->marked == 0)
+        mark_environment(f->parent_env);
+
+    // If the lambda is an interpreted lambda (not native), we need to mark
+    // the list of args (arg_spec) and the body (body) values
+    if (f->native_impl == 0) {
+        mark_value(f->arg_spec);
+        mark_value(f->body);
+    }
+
+    // Mark all lambdas, whether they are native or interpreted
+    f->marked = 1;
+}
+
+void mark_eval_stack(PtrStack *eval_stack) {
+    int i;
+    int j;
+
+    // Loop through elements in eval_stack
+    for (i = 0; i < eval_stack->size; i++) {
+       EvaluationContext *ctx = pv_get_elem(eval_stack, i);
+
+       // Mark the environment, if not null and if not already marked
+       Environment *env = ctx->current_env;
+       if (env != NULL)
+           mark_environment(env);
+
+       // Mark the expression, if not null
+        Value *expr = ctx->expression;
+        if (expr != NULL)
+            mark_value(expr);
+
+        // Loop through local vals and mark all the values
+        PtrVector *local_vals = &ctx->local_vals;
+        for (j = 0; j < local_vals->size; j++) {
+            Value **ppv = (Value **) pv_get_elem(local_vals, j);
+            if (*ppv != NULL)
+                mark_value(*ppv);
+        }
+    }
+}
+
 
 /*!
  * This function performs the garbage collection for the Scheme interpreter.
@@ -263,7 +355,7 @@ void collect_garbage() {
             max_allocation_size);
     }
 #endif
-    
+
 #ifdef GC_STATS
     vals_after = allocated_values.size;
     procs_after = allocated_lambdas.size;
