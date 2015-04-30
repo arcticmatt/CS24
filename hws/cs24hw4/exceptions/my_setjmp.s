@@ -1,9 +1,6 @@
 .globl my_setjmp
 .globl my_longjmp
 
-#define OFF_ESP 0
-
-
 # ===========================================================================
 # my_setjmp: custom implementation of setjmp
 #
@@ -23,9 +20,10 @@ my_setjmp:
                                        # first element of int array is the
                                        # current stack pointer (do this before
                                        # we push stuff onto the stack)
-    mov   %ebp, %ecx                   # Use %ecx as temp variable
+    mov   (%ebp), %ecx                 # Use %ecx as temp variable
     mov   %ecx, 4(%edx)                # M[%edx + 4] = M[%esp] =>
-                                       # second element of int array is %ebp
+                                       # second element of int array is caller's
+                                       # %ebp
     mov   4(%ebp), %ecx
     mov   %ecx, 8(%edx)                # M[%edx + 8] = retr address =>
                                        # third element of int array is the
@@ -65,9 +63,9 @@ my_longjmp:
     mov   12(%edx), %esi               # Restore %esi
     mov   16(%edx), %edi               # Restore %edi
     mov   20(%edx), %ebx               # Restore %ebx
-    mov   4(%edx), %ebp                # Restore %ebp
-    mov   (%edx), %esp                 # %esp = first element of buf array =>
-                                       # restoring %esp
+    mov   (%edx), %ebp                 # Restore %ebp
+    mov   4(%edx), %ecx                # Restore value at %ebp
+    mov   %ecx, (%ebp)
     mov   8(%edx), %ecx                # %ecx = M[%edx + 8] = return address
     mov   %ecx, 4(%ebp)                # Move return address to right above %ebp
     mov   %ebp, %esp                   # Clean up stack with next few lines
