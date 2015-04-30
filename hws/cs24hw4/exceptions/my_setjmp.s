@@ -40,10 +40,20 @@ my_setjmp:
                                        # sixth element of int array is the
                                        # callee-save register %ebx
     xor   %eax, %eax                   # %eax = 0
-    mov   %ebp, %esp
+    mov   %ebp, %esp                   # Usual return code
     pop   %ebp
-    ret
+    ret                                # Goes back to where setjmp was called
 
+# ===========================================================================
+# my_longjmp: custom implementation of longjmp
+#
+#
+# Arguments to my_setjmp are at these stack locations:
+#
+#         8(%ebp)  = int array used to store execution state associated with
+#                    registers and stack. use this array to restore state
+#         12(%ebp) = ret value. if 0, set %eax to 1. else, set it to the value.
+#
 my_longjmp:
     push  %ebp
     mov   %esp, %ebp
@@ -62,4 +72,4 @@ my_longjmp:
     mov   %ecx, 4(%ebp)                # Move return address to right above %ebp
     mov   %ebp, %esp                   # Clean up stack with next few lines
     pop   %ebp
-    ret
+    ret                                # Goes back to where setjmp was called

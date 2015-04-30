@@ -1,7 +1,9 @@
-call  8(%ebp) # This will call the getVolume function. It does this because
-              # 8(%ebp) is the address of a shape object, and the first
-              # member of shape objects are shape classes, and the first
-              # member of shape classes is always the getVolume function
-              # pointer. So the offset of the getVolume pointer in the shape
-              # structs is 0, which means 8(%ebp) is the address of the
-              # getVolume method, which means call 8(%ebp) invokes this method.
+movl  8(%ebp), %eax # This gives us the address of the data object
+movl  (%eax), %edx  # This "dereferences" the data object, and because
+                    # the first thing in data objects are classes, gives us
+                    # the address of the class
+movl  (%edx), %ecx  # This "dereferences" the class, and because the getVolume
+                    # function pointer is the first thing in classes, gives us
+                    # the function pointer
+call  %ecx          # This calls the getVolume function using the function
+                    # pointer
