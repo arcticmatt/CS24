@@ -7,6 +7,13 @@
 
 /**** REGISTER-FILE CONSTANTS ****/
 
+// This is 0b1111
+#define OP_MASK 0x0f
+#define OP_SHIFT 4
+#define ISREG_SHIFT 3
+// This is 0b111
+#define REG_MASK 0x7
+#define BR_MASK 0x0f
 
 /*! Specifies the number of address bits for the register file. */
 #define REGISTER_BITS 3

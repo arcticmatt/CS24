@@ -6,7 +6,7 @@
  * units in the processor.
  */
 
- 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -26,7 +26,7 @@
 
 
 /*!
- * This function dynamically allocates and initializes the state for a new 
+ * This function dynamically allocates and initializes the state for a new
  * branching instruction decoder instance.  If allocation fails, the program is
  * terminated.
  */
@@ -58,14 +58,14 @@ void free_decode(Decode *d) {
  *        an unsigned long.
  */
 void fetch_and_decode(InstructionStore *is, Decode *d, ProgramCounter *pc) {
-    /* This is the current instruction byte we are decoding. */ 
+    /* This is the current instruction byte we are decoding. */
     unsigned char instr_byte;
 
     /* The CPU operation the instruction represents.  This will be one of the
      * OP_XXXX values from instruction.h.
      */
     busdata_t operation;
-    
+
     /* Source-register values, including defaults for src1-related values. */
     busdata_t src1_addr = 0, src1_const = 0, src1_isreg = 1;
     busdata_t src2_addr = 0;
@@ -74,7 +74,7 @@ void fetch_and_decode(InstructionStore *is, Decode *d, ProgramCounter *pc) {
      * instructions, dst == src2.
      */
     busdata_t dst_addr = 0;
-    
+
     /* Flag controlling whether the destination register is written to.
      * Default value is to *not* write to the destination register.
      */
@@ -91,6 +91,46 @@ void fetch_and_decode(InstructionStore *is, Decode *d, ProgramCounter *pc) {
     /* TODO:  Fill in the implementation of the multi-byte */
     /*        instruction decoder.                         */
     /*=====================================================*/
+
+    // Retrieve top 4 bits of instr_byte
+    operation = ((instr_byte >> OP_SHIFT) & OP_MASK);
+    printf("operation = %u\n", operation);
+    // If operation is OP_DONE, we don't need to do anything else. Otherwise...
+    if (operation == OP_INC || operation == OP_DEC || operation == OP_NEG \
+            || operation == OP_INV || operation == OP_SHL \
+            || operation == OP_SHR) {
+        // Retrieve bottom 3 bits of instr_byte.
+        src1_addr = instr_byte & REG_MASK;
+        printf("src1_addr = %lu\n", src1_addr);
+    } else if (operation == OP_BRA || operation == OP_BRZ \
+            || operation == OP_BNZ) {
+        // Retrieve bottom 4 bits of instr_byte.
+        branch_addr = instr_byte & BR_MASK;
+        /*printf("branch_addr = %lu\n", branch_addr);*/
+    } else if (operation != OP_DONE) {
+        dst_write = WRITE_REG;
+        // Here we cover all two-argument instructions.
+        // Retrieve bottom 3 bits of instr_byte, which gives us the bits of the
+        // second register argument.
+        src2_addr = instr_byte & REG_MASK;
+        printf("src2_addr = %lu\n", src2_addr);
+        // Retrieve fourth bit from right, which is the a_isreg flag
+        src1_isreg = ((instr_byte >> ISREG_SHIFT) & 1);
+        // We are decoding a multi-byte instruction, so we need to move the
+        // program counter forward and read the new instruction byte
+        incrPC(pc);
+        ifetch(is);
+        instr_byte = pin_read(d->input);
+        // Now read the second byte. Read it differently depending on whether
+        // it is a register or a constant
+        if (src1_isreg) {
+            src1_addr = instr_byte & REG_MASK;
+        }
+        else {
+            src1_const = instr_byte;
+            printf("src1_const = %lu\n", src1_const);
+        }
+    }
 
     /* All decoded!  Write out the decoded values. */
 
