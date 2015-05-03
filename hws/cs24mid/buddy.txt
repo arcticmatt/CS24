@@ -42,4 +42,177 @@ Step 1:  A = alloc(6000);
 
 ==== PUT YOUR ANSWERS BELOW THIS LINE ====
 
+a)
+We have that MIN_BLOCK_SIZE = 32 bytes and that the maximum memory heap size
+is 2^31 bytes. Further, we know that a block with a given order x has size
+MIN_BLOCK_SIZE * 2^x. So We need to find the maximum x such that
+32 * 2^x <= 2^31. To do this we can just solve for
+32 * 2^x = 2^31, which yields
+x = 26.
+So we have that the maximum size order that the allocator can provide is 26.
+In this situation, we have that the free-list array has 27 indices (order 0
+through order 26), and each index stores a pointer to a list. We are on a
+32-bit machine, so we have that each pointer is 4 bytes, which makes the
+entire free-list array 108 bytes.
 
+b)
+int get_order_of_size(int size)
+    ====== PSEUDOCODE (python style) ======
+    order = 0
+    curr_size = MIN_BLOCK_SIZE * pow(2, order)
+    # Keep increasing order, curr_size until curr_size is big enough
+    while curr_size < size:
+        order += 1
+        curr_size *= 2
+    return order
+
+c)
+If the allocator keeps an array of free-lists, then the allocator should go
+through all free blocks in increasing size order. That is, first the allocator
+should go through the available blocks at index 0, which are of size order 0.
+Next, the allocator should go through the available blocks at index 1, which are
+of size order 1. And so forth. This makes it so that if the allocation request
+can be satisfied, it will be put into a free block that fits it well. If all
+free blocks have been iterated through and there hasn't been one found that can
+fit the allocation request, then the allocator knows the request cannot be
+satisfied and can return NULL.
+
+If the allocator does not keep an array of free-lists, then the allocator
+should just search through all the blocks and see if there are any free blocks
+that fit the desired allocation request.
+
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+  |06 A     |         |                   |                                       |
+  |1400     |         |                   |                                       |
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+
+d)
+Initial:
+
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+  |                                                                               |
+  |                                                                               |
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+
+Here we have our initial state before the first allocation. We can see that
+there is nothing allocated on the heap, and we have the entire space to work
+with.
+
+Step 1:  A = allocate(1400);
+
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+  |06 A     | 06 _    | 07 _              | 08 _                                  |
+  |1400     | 2KB     | 4KB               | 8KB                                   |
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+
+  Put A in leftmost block.
+
+Step 2:  B = allocate(5500);
+
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+  |06 A     | 06 _    | 07 _              | 08 B                                  |
+  |1400     | 2KB     | 4KB               | 5500                                  |
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+
+  Put B into rightmost block (only place it fits).
+
+Step 3:  C = allocate(800);
+
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+  |06 A     |05 C|05 _| 07 _              | 08 B                                  |
+  |1400     |800 |1KB | 4KB               | 5500                                  |
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+
+  Split order 6 block into two order 5 blocks, put C into left buddy.
+
+Step 4:  D = allocate(3200);
+
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+  |06 A     |05 C|05 _| 07 D              | 08 B                                  |
+  |1400     |800 |1KB | 3200              | 5500                                  |
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+
+  Put D into fourth block from left (only place it fits).
+
+  After the completion of this step, we have 1 KiB of unallocated heap space,
+  which translates to 1024 bytes of unallocated heap space. But we need some of
+  that space to keep our array of free-lists. Lets see what we need to keep
+  track of.
+  For each size order, we need to keep a pointer to a list of available blocks.
+  So since the max size order is 9, and pointers are 4 bytes, this means that
+  the size of the array of free-lists is
+  10 * 4 = 40 bytes.
+  And since we don't need any pointers to chain together unused blocks of the
+  same size (we only have one unused block), this is the only memory that is
+  not available to us for allocation. So we have that there are
+  1024 - 40 = 984 bytes still available to satisfy allocation requests and
+  that there are 40 bytes unused by the program, but not available to satisfy
+  allocation requests.
+
+Step 5:  free(A);
+
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+  |06 _     |05 C|05 _| 07 D              | 08 B                                  |
+  |2KB      |800 |1KB | 3200              | 5500                                  |
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+
+  No coalescing happens because A's buddy has C in it.
+
+Step 6:  E = allocate(700);
+
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+  |06 _     |05 C|05 E| 07 D              | 08 B                                  |
+  |2KB      |800 |700 | 3200              | 5500                                  |
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+
+  Puts E into third block from left (it's the best fit, and no need to split).
+
+Step 7:  free(B);
+
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+  |06 _     |05 C|05 E| 07 D              | 08 _                                  |
+  |2KB      |800 |700 | 3200              | 8KB                                   |
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+
+  No coalescing happens because B's buddy has allocations.
+
+Step 8:  free(C);
+
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+  |06 _     |05 _|05 E| 07 D              | 08 _                                  |
+  |2KB      |1KB |700 | 3200              | 8KB                                   |
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+
+  No coalescing happens because C's buddy has allocations.
+
+Step 9:  free(E);
+
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+  |06 _     |06 _     | 07 D              | 08 _                                  |
+  |2KB      |2KB      | 3200              | 8KB                                   |
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+
+  Free E and coalesce because its buddy is free. Then, coalesce again as follows
+  because we have free adjacent buddies...
+
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+  |07 _               | 07 D              | 08 _                                  |
+  |4KB                | 3200              | 8KB                                   |
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+
+Step 10: free(D);
+
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+  |08 _                                   | 08 _                                  |
+  |8KB                                    | 8KB                                   |
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+
+  Free D and coalesce because its budy is free. Then, coalesce again as follows
+  because we have free adjacent buddies...
+
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+  |09 _                                                                           |
+  |16KB                                                                           |
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+
+  which brings us back to our initial state.
