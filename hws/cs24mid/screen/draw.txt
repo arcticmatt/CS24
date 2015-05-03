@@ -1,0 +1,11 @@
+Pseudocode for draw_pixel()
+
+C-code would look something as follows, where we initialize a new pixel with
+the passed-in parameters and change the screen if the depth tells us to:
+
+Pixel *pixel = malloc(sizeof(Pixel));
+pixel->value = value;
+pixel->depth = depth;
+Pixel *old_pixel = s[y * s->width + x];
+if (old_pixel->depth <= pixel->depth)
+    s[y * s->width + x] = pixel;
