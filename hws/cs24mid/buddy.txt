@@ -216,3 +216,40 @@ Step 10: free(D);
   +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
 
   which brings us back to our initial state.
+
+
+e)
+One limitation of buddy allocators is that they leave a lot of space on the
+table. That is, because they divide blocks up into chunks of predetermined
+sizes, they lose some space efficency. For example, in Step 2 above, we
+wanted to allocate some space for 5500 bytes. But because of the way buddy
+allocators work, we had to place it in a large 8KB chunk of memory. Thus,
+we "wasted" around 3KB of memory because we did not have the flexibility of
+allocating a custom sized chunk of memory, and instead were forced to
+give a chunk that was too big.
+
+f)
+The best-fit placement strategy is the closest to the placement strategy that
+the buddy allocator uses. This is because best-fit chooses the smallest free
+block that satisfies the allocation request. We do something very similar here.
+First, we find the smallest-order free block currently in the heap that fits
+the allocation request. In other words, it finds the "best-fit." Then, we go
+even further; if the block has a larger order than the required order, the
+allocator repeatedly sudivides the block until it has a block of the
+appropriate size order for the request. In short, the allocator finds the
+current best-fit, and if the fit is still too large, it makes the fit better.
+So we can see that this strategy is not very similar to first-fit or next-fit,
+but very similar to best-fit.
+
+g)
+One situation in which deferred coalescing would be prefferable over immediate
+coalescing is if there were a lot of small-sized requests. In this case, it
+would be good to not immediately coalesce: coalescing would just form larger
+blocks, which would have to be subdivided upon receiving the small-sized
+requests. In other words, deferring the coalescing process would make the
+allocation process more time efficient, because the allocator wouldn't have to
+spend time dividing blocks into smaller blocks; the smaller blocks would already
+be there. Or, alternatively, the allocator would have to divide the blocks less,
+because the blocks would be smaller than if they had been coalesced. Either way,
+in this situation the benefit would be a more time efficient allocator, as the
+division process would be cut down upon.
