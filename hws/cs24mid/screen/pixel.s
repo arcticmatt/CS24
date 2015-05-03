@@ -30,7 +30,7 @@ draw_pixel:
                              # height
     mov    (%edx), %esi      # %esi = M[%edx] = height
     add    $4, %edx          # %edx += 4, dereferencing should give us the
-                             # array of pixels
+                             # first pixel
 
     # Calculate index of screen array to access to get the pixel we want
     mov    12(%ebp), %edi    # %edi = x
@@ -53,7 +53,7 @@ draw_pixel:
     add    %ecx, %edx        # %edx += y * width + x, dereferencing should give
                              # us value of the pixel at coordinate (x, y)
     mov    (%edx), %ebx      # %ebx = M[%edx] = old_pixel->value
-    add    $4, %edx          # %edx +=4, dereferencing should give us the depth
+    add    $1, %edx          # %edx +=1, dereferencing should give us the depth
                              # of the pixel at coordinate (x, y)
     mov    (%edx), %esi      # %esi = M[%edx] = old_pixel->depth
     mov    20(%ebp), %ecx    # %ecx = new_pixel->value
@@ -65,10 +65,10 @@ draw_pixel:
     jmp    draw_pixel_return # Else, just return
 
 replace_pixel:
-    sub    $4, %edx          # Move %edx back so that it points to
+    sub    $1, %edx          # Move %edx back so that it points to
                              # old_pixel->value
     mov    %ecx, (%edx)      # Change the pixel value to the passed-in value
-    add    $4, %edx          # Move %edx forward so that it points to
+    add    $1, %edx          # Move %edx forward so that it points to
                              # old_pixel -> depth
     mov    %edi, (%edx)      # Change the pixel depth to the passed-in value
 
