@@ -2,17 +2,15 @@
 Answers to Problem 1 Questions
 
 1)
+Counting out the instructions gives the following answer:
 MUL_LOOP:
-    MOV is at PC = 0
-    AND is at PC = 1
-    BRZ is at PC = 2
-    which puts MUL_LOOP at an offset of 3.
+    offset of 3.
 
 SKIP_ADD:
+    offset of 7
 
 MUL_DONE:
-    If the numerator == 0 initially, then the offset is
-
+    offset of 10
 
 2)
 R5 := R5 - 6
