@@ -94,14 +94,14 @@ void fetch_and_decode(InstructionStore *is, Decode *d, ProgramCounter *pc) {
 
     // Retrieve top 4 bits of instr_byte
     operation = ((instr_byte >> OP_SHIFT) & OP_MASK);
-    printf("operation = %u\n", operation);
     // If operation is OP_DONE, we don't need to do anything else. Otherwise...
     if (operation == OP_INC || operation == OP_DEC || operation == OP_NEG \
             || operation == OP_INV || operation == OP_SHL \
             || operation == OP_SHR) {
+        dst_write = WRITE_REG;
         // Retrieve bottom 3 bits of instr_byte.
         src1_addr = instr_byte & REG_MASK;
-        printf("src1_addr = %lu\n", src1_addr);
+        src2_addr = src1_addr; // ===== ADDED THIS ONE LINE AFTER 6 HOURS ====
     } else if (operation == OP_BRA || operation == OP_BRZ \
             || operation == OP_BNZ) {
         // Retrieve bottom 4 bits of instr_byte.
@@ -113,7 +113,6 @@ void fetch_and_decode(InstructionStore *is, Decode *d, ProgramCounter *pc) {
         // Retrieve bottom 3 bits of instr_byte, which gives us the bits of the
         // second register argument.
         src2_addr = instr_byte & REG_MASK;
-        printf("src2_addr = %lu\n", src2_addr);
         // Retrieve fourth bit from right, which is the a_isreg flag
         src1_isreg = ((instr_byte >> ISREG_SHIFT) & 1);
         // We are decoding a multi-byte instruction, so we need to move the
@@ -128,7 +127,6 @@ void fetch_and_decode(InstructionStore *is, Decode *d, ProgramCounter *pc) {
         }
         else {
             src1_const = instr_byte;
-            printf("src1_const = %lu\n", src1_const);
         }
     }
 
