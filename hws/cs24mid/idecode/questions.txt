@@ -1,0 +1,30 @@
+================== ALL OF THIS IS IN THE SEVENTH HOUR ========================
+Answers to Problem 1 Questions
+
+1)
+MUL_LOOP:
+    MOV is at PC = 0
+    AND is at PC = 1
+    BRZ is at PC = 2
+    which puts MUL_LOOP at an offset of 3.
+
+SKIP_ADD:
+
+MUL_DONE:
+    If the numerator == 0 initially, then the offset is
+
+
+2)
+R5 := R5 - 6
+The assembly instruction is:
+sub 6, R5
+The encoded bit pattern is:
+10100101 (first byte)
+00000110 (second byte)
+
+R4 := R4 ^ R1
+The assembly instruction is:
+xor R1, R4
+The encoded bit pattern is:
+11101100 (first byte)
+xxxxx001 (second byte)

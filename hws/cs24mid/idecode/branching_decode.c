@@ -101,7 +101,7 @@ void fetch_and_decode(InstructionStore *is, Decode *d, ProgramCounter *pc) {
         dst_write = WRITE_REG;
         // Retrieve bottom 3 bits of instr_byte.
         src1_addr = instr_byte & REG_MASK;
-        src2_addr = src1_addr; // ===== ADDED THIS ONE LINE AFTER 6 HOURS ====
+        src2_addr = src1_addr; // ===== ADDED THIS ONE LINE IN THE 7TH HOUR ====
     } else if (operation == OP_BRA || operation == OP_BRZ \
             || operation == OP_BNZ) {
         // Retrieve bottom 4 bits of instr_byte.
