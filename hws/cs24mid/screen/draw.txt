@@ -13,3 +13,39 @@ pixel->depth = depth;
 Pixel *old_pixel = s[y * s->width + x];
 if (old_pixel->depth >= pixel->depth)
     s[y * s->width + x] = pixel;
+
+
+For more assemblyish pseudocode, see the following:
+
+Save caller ebp
+Set up stack frame ptr
+Save callee-save registers we alter
+
+Move width and height of screen into registers
+    Do this by dereferencing the address of the screen array, and the
+    address of the screen array + 4
+
+Get x and y arguments from stack
+
+Make sure x and y arguments are within bounds
+    Check x >= 0 and x < width
+    Check y >= and y < height
+
+Calculate index of screen array to access in order to get desired pixel
+    index = (y * width + x) * 2
+    We multiply by 2 because each pixel is 2 bytes
+
+Add the index value we just calculated to the array pointer, which by now
+should be past width and height and at the first pixel in pixels[]
+
+Get the value and depth of the pixel we are looking at, store them into byte
+registers
+
+Compare this depth to the passed-in depth. If this depth is >= the passed-in
+depth, then replace the pixel on the screen with the new value
+    To replace the pixel, just overwrite the pixel's value and depth values
+    by using the array pointer
+
+Restore the callee-save registers we altered
+
+Clean up the stack and return

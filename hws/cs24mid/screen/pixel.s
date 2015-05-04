@@ -32,7 +32,7 @@ draw_pixel:
     addl   $4, %edx          # %edx += 4, dereferencing should give us the
                              # first pixel
 
-    # Calculate index of screen array to access to get the pixel we want
+    # Get x and y arguments
     movl   12(%ebp), %edi    # %edi = x
     movl   16(%ebp), %ecx    # %ecx = y
 
@@ -46,7 +46,7 @@ draw_pixel:
     cmpl   %ecx, %esi        # Update flags as for height - y
     jle    draw_pixel_return # If y >= height, return
 
-    # Calculate index of screen array to access to get the pixel we want
+    # Calculate index of screen array to access in order to get desired pixel
     imull  %ebx, %ecx        # %ecx = y * width
     addl   %edi, %ecx        # %ecx = y * width + x
     imull  $2, %ecx          # Multiply index by 2 because each pixel is 2 bytes
