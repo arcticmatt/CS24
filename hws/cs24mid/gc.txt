@@ -1,0 +1,59 @@
+Answers to Problem 4: Garbage Collection
+
+a)
+Yes, there are constraints, Since we are working with a version of Scheme that
+only allows single assignment (we removed set!, set-car!, and set-cdr!) we
+cannot modify cons-pair cells after they have been set. Thus, a given cons-pair
+cell cannot reference cells that are allocated after it has already been
+allocated. That is, it can only reference previously allocated cells.
+
+b)
+void mark_and_sweep
+    cell = newest()
+
+    // Traverse all allocated cells and mark the reachable ones.
+    // Free the ones that are no longer reachable. Also unmarks previously
+    // marks cells.
+    while cell != NULL
+        // If true, cell was previously marked. So, unmark and and continue
+        // to avoid freeing it. Also, check if its a cons root to see if we
+        // need to mark its references
+        if (is_marked(cell))
+            set_marked(cell, false)
+            if (is_root(cell) && is_cons(cell))
+                set_marked(car(cell), true)
+                set_marked(cdr(cell), true)
+            continue
+
+        // Get a pointer to the cell that was allocated immediately before this
+        // cell
+        temp = cell.prev_alloc
+        if (is_root(cell) && is_cons(cell))
+            // Mark the car and cdr values, but don't mark the cell itself;
+            // just don't free it. We will unmark these values later.
+            set_marked(car(cell), true)
+            set_marked(cdr(cell), true)
+        else
+            free(cell)
+
+        cell = temp
+
+c)
+Yes, my algorithm has the ability to be interrupted and resumed, because
+we are disallowing set-car! and set-cdr!, which means it will not reclaim
+memory cells that are actually reachable.
+
+The consequences of pausing and resuming the algorithm are that we will have
+a mix of marked/non-marked cells, which is dirty - ideally, when we are out of
+garbage collection, all cells should be unmarked. Also, the linked list of
+allocated memory cells will be dirty too: some of the non-reachable cells
+will have been reclaimed, but some of them will still be there. This will
+make searching through the allocated memory slower than if garbage collection
+had run to completion.
+
+===================== EXTRA HOUR =============================================
+
+Also, upon resuming, if we just naively call the
+algorithm again (so it would start with cell = newest()) then we wouldn't be
+exactly where we left off. So we would have to go through some newly allocated
+cells first in order to get back to where we were.
