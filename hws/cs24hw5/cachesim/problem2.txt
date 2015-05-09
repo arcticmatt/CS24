@@ -1,0 +1,35 @@
+Measurements and Replacement Policy
+
+d)
+Use 256 cache sets because 256 * 32 * 1 = 8192
+
+./heaptest 32:256:1
+
+=== Cache Params ======
+* Memory of size 4000000 bytes
+* Cache with a block-size of 32 bytes, 256 cache-sets, and 1 cache-lines per
+  set. Total cache size is 8192 bytes.
+
+=== Miss Rate =========
+* miss-rate=2.40% random replacement policy
+
+=== Extra Statistics ==
+* Memory reads=418382272 writes=334897760
+* Cache reads=387851976 writes=156711356 hits=531488886 misses=13074446
+
+e)
+Full associative, so use 1 cache set
+
+./heaptest 32:1:256
+
+=== Cache Params ======
+* Memory of size 4000000 bytes
+* Cache with a block-size of 32 bytes, 1 cache-sets, and 256 cache-lines per
+  set. Total cache size is 8192 bytes.
+
+=== Miss Rate =========
+* miss-rate=2.45% random replacement policy
+
+=== Extra Statistics ==
+* Memory reads=427057792 writes=345422560
+* Cache reads=387851976 writes=156711356 hits=531217776 misses=13345556
