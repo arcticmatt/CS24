@@ -17,7 +17,7 @@ typedef struct cacheline_t {
 
     /* This is the tag for the cache line, taken from the address. */
     unsigned int tag;
-    
+
     /* This is the start of the block of data itself. */
     unsigned char *block;
 } cacheline_t;
@@ -50,22 +50,22 @@ typedef struct cacheset_t {
 typedef struct cache_t {
     /* The number of reads that occurred at this level of the memory. */
     unsigned long long num_reads;
-    
+
     /* The number of writes that occurred at this level of the memory. */
     unsigned long long num_writes;
 
     /* The function to read a byte from the cache. */
     unsigned char (*read_byte)(membase_t *mb, addr_t address);
-    
+
     /* The function to write a byte to the cache. */
     void (*write_byte)(membase_t *mb, addr_t address, unsigned char value);
-    
+
     /* The function to print the cache's access statistics. */
     void (*print_stats)(struct membase_t *mb);
-    
+
     /* The function to reset the cache's access statistics. */
     void (*reset_stats)(struct membase_t *mb);
-    
+
     /* The function to release any internally allocated data used by
      * the memory.
      */
@@ -80,12 +80,14 @@ typedef struct cache_t {
 
     /* This is the number of address bits devoted to identifying the
      * cache set based on the address.
+     * s bits from lecture slides (lec 14 slide 30)?
      */
     unsigned int sets_addr_bits;
 
 
     /* This is the number of address bits devoted to the offset within
      * the block based on the address.  It is required to be a power of 2.
+     * b bits from lecture slides (lec 14 slide 30)?
      */
     unsigned int block_offset_bits;
 
