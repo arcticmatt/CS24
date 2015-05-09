@@ -1,6 +1,6 @@
 all: testmem heaptest apsptest qsorttest
 
-CFLAGS=-O2
+CFLAGS=-g -O2
 #CFLAGS=-g -O0
 
 

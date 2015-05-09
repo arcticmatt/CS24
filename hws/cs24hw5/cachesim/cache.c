@@ -292,7 +292,6 @@ void decompose_address(cache_t *p_cache, addr_t address,
     assert(set != NULL);
     assert(offset != NULL);
 
-    /* TODO:  IMPLEMENT */
     /*
      * === Number of bits for each value ===
      * offset: block_offset_bits = b
@@ -331,13 +330,10 @@ void decompose_address(cache_t *p_cache, addr_t address,
  * the memory.
  */
 addr_t get_block_start_from_address(cache_t *p_cache, addr_t address) {
-    /* TODO:  IMPLEMENT */
-    // First we need to determine which block in main memory we are looking at.
-    // This is the starting address of main memory.
-    addr_t start_addr = (addr_t) p_cache->next_memory;
-    int mem_diff = address - start_addr;
-    int num_blocks = mem_diff / p_cache->block_size;
-    addr_t block_start_addr = num_blocks * p_cache->block_size;
+    // Get corresponding block_num of the passed-in address.
+    int block_num = address / p_cache->block_size;
+    // Turn this back into an address by multiplying by block_size.
+    addr_t block_start_addr = block_num * p_cache->block_size;
     return block_start_addr;
 }
 
@@ -346,7 +342,7 @@ addr_t get_block_start_from_address(cache_t *p_cache, addr_t address) {
  * cache, and returns the offset within the block that the access occurs at.
  */
 addr_t get_offset_in_block(cache_t *p_cache, addr_t address) {
-    /* TODO:  IMPLEMENT */
+    /* To get offset, decompose the address and return the output param */
     addr_t tag;
     addr_t set;
     addr_t offset;
@@ -362,33 +358,22 @@ addr_t get_offset_in_block(cache_t *p_cache, addr_t address) {
  */
 addr_t get_block_start_from_line_info(cache_t *p_cache,
                                       addr_t tag, addr_t set_no) {
-    /* TODO:  IMPLEMENT */
-    int i, j;
-    unsigned int curr_tag;
-    addr_t curr_set_no;
+    /*
+     * Need to map this information back to address in main memory. Do so
+     * by reconstructing the address and calling get_block_start_from_address.
+     */
+    /* Helper variables */
+    unsigned int b = p_cache->block_offset_bits;
+    unsigned int s = p_cache->sets_addr_bits;
+    unsigned int t = sizeof(addr_t) * 8 - s - b; // 8 bits per byte
 
-    // Loop through all cache sets of the passed-in cache
-    cacheset_t *cache_sets_temp = p_cache->cache_sets;
-    for (i = 0; i < p_cache->num_sets; ++i, ++cache_sets_temp) {
-        curr_set_no = (*cache_sets_temp).set_no;
-        // This is the cache set we are looking for
-        if (curr_set_no == set_no) {
-            cacheset_t cache_set = *cache_sets_temp;
-            cacheline_t *cache_lines_temp = cache_set.cache_lines;
-            for (j = 0; j < cache_set.num_lines; ++j, ++cache_lines_temp) {
-                curr_tag = (*cache_lines_temp).tag;
-                // This is the cache line we are looking for
-                if (curr_tag == tag) {
-                    printf("Found the desired cache line\n");
-                    addr_t start_addr = (addr_t) (*cache_lines_temp).block;
-                    return start_addr;
-                }
-            }
-        }
-    }
-
-    printf("Desired cache line was not found; returning 0\n");
-    return 0;
+    /* Reconstruct address */
+    addr_t address = tag;
+    address <<= s;
+    address |= set_no;
+    address <<= b;
+    addr_t block_start = get_block_start_from_address(p_cache, address);
+    return block_start;
 }
 
 
@@ -397,15 +382,31 @@ addr_t get_block_start_from_line_info(cache_t *p_cache,
  * returns NULL.
  */
 cacheline_t * find_line_in_set(cacheset_t *p_set, addr_t tag) {
-    cacheline_t *found_line = NULL;
-
 #if DEBUG_CACHE
     printf(" * Finding line with tag %u in cache set:\n", tag);
 #endif
 
-    /* TODO:  IMPLEMENT */
+    int j;
+    char valid;
+    addr_t curr_tag;
+    cacheline_t *cache_lines_temp = p_set->cache_lines;
+    /* Loop through the cache lines, search for the desired one */
+    for (j = 0; j < p_set->num_lines; ++j, ++cache_lines_temp) {
+        curr_tag = (*cache_lines_temp).tag;
+        valid = (*cache_lines_temp).valid;
+        // This is the cache line we are looking for
+        if (curr_tag == tag && valid == 1) {
+#if DEBUG_CACHE
+            printf("Found the desired cache line\n");
+#endif
+            return &(*cache_lines_temp);
+        }
+    }
 
-    return found_line;
+#if DEBUG_CACHE
+    printf("Desired cache line was not found; returning 0\n");
+#endif
+    return NULL;
 }
 
 
