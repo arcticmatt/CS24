@@ -20,6 +20,9 @@ typedef struct cacheline_t {
 
     /* This is the start of the block of data itself. */
     unsigned char *block;
+
+    /* This stores the most recent time that the line was accessed. */
+    unsigned long long int access_time;
 } cacheline_t;
 
 

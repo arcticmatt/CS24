@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <limits.h>
 
 #include "cache.h"
 
@@ -13,7 +14,7 @@
 /* Set this to 0 to activate your custom replacement policy, which is
  * hopefully smarter and better than a random replacement policy!
  */
-#define RANDOM_REPLACEMENT_POLICY 1
+#define RANDOM_REPLACEMENT_POLICY 0
 
 
 /* Local functions used by the cache implementation, roughly in order of
@@ -120,6 +121,8 @@ unsigned char cache_read_byte(membase_t *mb, addr_t address) {
 #endif
 
     p_line = resolve_cache_access(p_cache, address);
+    /* Update the access_time of the cache line, b/c we are reading from it */
+    p_line->access_time = clock_tick();
     block_offset = get_offset_in_block(p_cache, address);
 
 #if DEBUG_CACHE
@@ -136,6 +139,8 @@ unsigned char cache_read_byte(membase_t *mb, addr_t address) {
 void cache_write_byte(membase_t *mb, addr_t address, unsigned char value) {
     cache_t *p_cache = (cache_t *) mb;
     cacheline_t *p_line = resolve_cache_access(p_cache, address);
+    /* Update the access_time of the cache line, b/c we are reading from it */
+    p_line->access_time = clock_tick();
     addr_t block_offset = get_offset_in_block(p_cache, address);
 
     /* Write the byte specified by the requester. */
@@ -426,7 +431,32 @@ cacheline_t * choose_victim(cacheset_t *p_set) {
     victim = p_set->cache_lines + i_victim;
 #else
     /* TODO:  Implement the LRU eviction policy. */
-    abort();
+    int j;
+    char valid;
+    unsigned long long int min_access_time = LONG_MAX;
+    unsigned long long int curr_access_time;
+    cacheline_t *cache_lines_temp = p_set->cache_lines;
+    /* Loop through the cache lines, search for the desired one */
+    for (j = 0; j < p_set->num_lines; ++j, ++cache_lines_temp) {
+        valid = (*cache_lines_temp).valid;
+        // If we come across a line that is invalid, just return it because it's
+        // currently empty
+        if (valid == 0) {
+#if DEBUG_CACHE
+            printf("Found an invalid cache line; return immediately because \
+                    it is currently empty\n");
+#endif
+            victim = &(*cache_lines_temp);
+            break;
+        }
+        // Otherwise, find the line with the smallest access-time value (LRU)
+        curr_access_time = (*cache_lines_temp).access_time;
+        if (curr_access_time < min_access_time) {
+            min_access_time = curr_access_time;
+            victim = &(*cache_lines_temp);
+        }
+    }
+
 #endif
 
 #if DEBUG_CACHE

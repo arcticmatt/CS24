@@ -33,3 +33,32 @@ Full associative, so use 1 cache set
 === Extra Statistics ==
 * Memory reads=427057792 writes=345422560
 * Cache reads=387851976 writes=156711356 hits=531217776 misses=13345556
+
+g)
+Re-running ./heaptest 32:256:1 with LRU
+
+=== Cache Params ======
+* Memory of size 4000000 bytes
+* Cache with a block-size of 32 bytes, 256 cache-sets, and 1 cache-lines per
+  set. Total cache size is 8192 bytes.
+
+=== Miss Rate =========
+* miss-rate=2.40% LRU replacement policy
+
+=== Extra Statistics ==
+* Memory reads=418382272 writes=334897760
+* Cache reads=387851976 writes=156711356 hits=531488886 misses=13074446
+
+Re-running ./heaptest 32:1:256
+
+=== Cache Params ======
+* Memory of size 4000000 bytes
+* Cache with a block-size of 32 bytes, 1 cache-sets, and 256 cache-lines per
+  set. Total cache size is 8192 bytes.
+
+=== Miss Rate =========
+* miss-rate=2.26% LRU replacement policy
+
+=== Extra Statistics ==
+* Memory reads=393358176 writes=315978048
+* Cache reads=387851976 writes=156711356 hits=532270889 misses=12292443
