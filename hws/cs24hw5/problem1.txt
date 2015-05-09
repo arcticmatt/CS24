@@ -1,0 +1,40 @@
+Problem 1: Cache Analysis
+
+a)
+===== Known variables =====
+Hit time = 1 cycles
+Miss penalty = 100 cycles
+
+Miss rate = # misses / # references
+
+Need 1 data value per 1 instruction
+
+Completing 750,000,000 instructions per second
+
+3 GHz processor = 3,000,000,000 cycles / second
+
+===== Solving the Problem =====
+Let miss_rate = x. Then we have.
+
+(1 - x) * 1 + x * 100 = 99*x + 1 cycles/access
+
+We have that there are 750,000,000 accesses per second, which means
+that there are
+
+750,000,000 * (99*x + 1) cycles / second
+
+Then we can set
+
+3,000,000,000 cycles / second = 750,000,000 * (99*x + 1) cycles / second
+
+to find that x = miss_rate = 1/33
+
+b)
+Doubling the performance means we want
+1,500,000,000 instructions per second.
+
+So we can solve for
+
+3,000,000,000 cycles / second = 1,500,000,000 * (99*x + 1) cycles / second
+
+which gives us x = miss_rate = 1/99
