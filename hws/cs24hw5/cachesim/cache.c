@@ -332,7 +332,13 @@ void decompose_address(cache_t *p_cache, addr_t address,
  */
 addr_t get_block_start_from_address(cache_t *p_cache, addr_t address) {
     /* TODO:  IMPLEMENT */
-    return 0;
+    // First we need to determine which block in main memory we are looking at.
+    // This is the starting address of main memory.
+    addr_t start_addr = (addr_t) p_cache->next_memory;
+    int mem_diff = address - start_addr;
+    int num_blocks = mem_diff / p_cache->block_size;
+    addr_t block_start_addr = num_blocks * p_cache->block_size;
+    return block_start_addr;
 }
 
 
@@ -341,7 +347,11 @@ addr_t get_block_start_from_address(cache_t *p_cache, addr_t address) {
  */
 addr_t get_offset_in_block(cache_t *p_cache, addr_t address) {
     /* TODO:  IMPLEMENT */
-    return 0;
+    addr_t tag;
+    addr_t set;
+    addr_t offset;
+    decompose_address(p_cache, address, &tag, &set, &offset);
+    return offset;
 }
 
 
@@ -353,6 +363,31 @@ addr_t get_offset_in_block(cache_t *p_cache, addr_t address) {
 addr_t get_block_start_from_line_info(cache_t *p_cache,
                                       addr_t tag, addr_t set_no) {
     /* TODO:  IMPLEMENT */
+    int i, j;
+    unsigned int curr_tag;
+    addr_t curr_set_no;
+
+    // Loop through all cache sets of the passed-in cache
+    cacheset_t *cache_sets_temp = p_cache->cache_sets;
+    for (i = 0; i < p_cache->num_sets; ++i, ++cache_sets_temp) {
+        curr_set_no = (*cache_sets_temp).set_no;
+        // This is the cache set we are looking for
+        if (curr_set_no == set_no) {
+            cacheset_t cache_set = *cache_sets_temp;
+            cacheline_t *cache_lines_temp = cache_set.cache_lines;
+            for (j = 0; j < cache_set.num_lines; ++j, ++cache_lines_temp) {
+                curr_tag = (*cache_lines_temp).tag;
+                // This is the cache line we are looking for
+                if (curr_tag == tag) {
+                    printf("Found the desired cache line\n");
+                    addr_t start_addr = (addr_t) (*cache_lines_temp).block;
+                    return start_addr;
+                }
+            }
+        }
+    }
+
+    printf("Desired cache line was not found; returning 0\n");
     return 0;
 }
 
