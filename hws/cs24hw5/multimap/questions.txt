@@ -2,11 +2,73 @@ Multimap Caching Performance
 ============================
 
 b)  Output of mmperf:
+Testing multimap performance:  300000 pairs, 1000000 probes, random keys.
+Adding 300000 pairs to multimap.  Keys in range [0, 50), values in range [0, 1000).
+Probing multimap 1000000 times.  Keys in range [0, 50), values in range [0, 1000).
+Total hits:  997144/1000000 (99.7%)
+Total wall-clock time:  15.74 seconds		us per probe:  15.735 us
 
+Testing multimap performance:  300000 pairs, 1000000 probes, incrementing keys.
+Adding 300000 pairs to multimap.  Keys in range [0, 50), values in range [0, 1000).
+Probing multimap 1000000 times.  Keys in range [0, 50), values in range [0, 1000).
+Total hits:  997715/1000000 (99.8%)
+Total wall-clock time:  35.87 seconds		us per probe:  35.873 us
 
+Testing multimap performance:  300000 pairs, 1000000 probes, decrementing keys.
+Adding 300000 pairs to multimap.  Keys in range [0, 50), values in range [0, 1000).
+Probing multimap 1000000 times.  Keys in range [0, 50), values in range [0, 1000).
+Total hits:  997325/1000000 (99.7%)
+Total wall-clock time:  35.02 seconds		us per probe:  35.019 us
+
+Testing multimap performance:  15000000 pairs, 1000000 probes, random keys.
+Adding 15000000 pairs to multimap.  Keys in range [0, 100000), values in range [0, 50).
+Probing multimap 1000000 times.  Keys in range [0, 100000), values in range [0, 50).
+Total hits:  949586/1000000 (95.0%)
+Total wall-clock time:  5.84 seconds		us per probe:  5.841 us
+
+Testing multimap performance:  100000 pairs, 50000 probes, incrementing keys.
+Adding 100000 pairs to multimap.  Keys in range [0, 100000), values in range [0, 50).
+Probing multimap 50000 times.  Keys in range [0, 100000), values in range [0, 50).
+Total hits:  976/50000 (2.0%)
+Total wall-clock time:  127.63 seconds		us per probe:  2552.638 us
+
+Testing multimap performance:  100000 pairs, 50000 probes, decrementing keys.
+Adding 100000 pairs to multimap.  Keys in range [0, 100000), values in range [0, 50).
+Probing multimap 50000 times.  Keys in range [0, 100000), values in range [0, 50).
+Total hits:  980/50000 (2.0%)
+Total wall-clock time:  123.94 seconds		us per probe:  2478.898 us
+
+./mmperf  815.66s user 0.87s system 99% cpu 13:40.97 total
 
 c)  Explanation of tests:
+We can observe that the first three tests have a relatively small range of
+key values and a relatively large range of value values. This means that the
+multimap trees created by these tests have a limited number of nodes: 50, to
+be precise. However, since we are creating so many key-value pairs in these
+tests, and given our relatively small range of keys, we will find that each
+node will most likely have a lot of values associated with it, because we will
+get a lot of repeated keys. This means that the linked list of values that each
+node holds will most likely be relatively long. Thus, when we are probing for
+pairs in this tree, it will take a relatively short time to find the key, but
+finding the value may take some time because we have to iterate through the
+linked list of values.
 
+We can then observe that the last three tests have a relatively large range of
+key values and a relatively small range of value values. This means that the
+multimap trees created by these tests will have many more nodes than the
+previous three tests; our limit is now 100000! However, since our range of
+keys is so large, we will find that the linked list of values for each node will
+be relatively short, because we won't get a lot of repeated keys. Thus, when we
+are probing for pairs in this tree, it will take a relatively long time to find
+the key (because there are so many), but finding the value should be a quick
+operation.
+
+In terms of the code, this means that for the first three tests, the while loop
+find_mm_node() (finds the node with associated with a given key, starting from
+the root) will most likely be the most time consuming operation. For the
+last three tests, the while loop in mm_contains_pair() (starting from a node,
+goes through its linked list and looks for a value) will most likely be
+the most time consuming operation.
 
 
 e)  Explanation of your optimizations:
