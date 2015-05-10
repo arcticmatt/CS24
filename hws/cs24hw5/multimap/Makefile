@@ -1,12 +1,12 @@
 # For performance testing:
-CFLAGS = -Wall -DNDEBUG -O2
+CFLAGS = -Wall -DNDEBUG -O2 -g
 
 # For debugging:
 # CFLAGS = -Wall -g -O0 -DDEBUG_ZERO
 
 CFLAGS += -m32
 
-all:  mmtest mmperf
+all:  mmtest mmperf ommtest ommperf
 opt:  ommtest ommperf
 
 mmtest: mmtest.o mm_impl.o
