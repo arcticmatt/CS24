@@ -15,13 +15,6 @@
  *   programs are generic and don't have any access to implementation details.
  *============================================================================*/
 
- /* Represents a value that is associated with a given key in the multimap. */
-typedef struct multimap_value {
-    int value;
-    struct multimap_value *next;
-} multimap_value;
-
-
 /* Represents a key and its associated values in the multimap, as well as
  * pointers to the left and right child nodes in the multimap. */
 typedef struct multimap_node {
@@ -34,10 +27,10 @@ typedef struct multimap_node {
     int *values;
 
     /* The current size of the values array. */
-    int curr_size;
+    unsigned short curr_size;
 
     /* The max size of the values array. */
-    int max_size;
+    unsigned short max_size;
 
     /* The left child of the multimap node.  This will reference nodes that
      * hold keys that are strictly less than this node's key.
@@ -429,9 +422,9 @@ void mm_traverse(multimap *mm, void (*f)(int key, int value)) {
  */
 void resize_values(multimap_node *node) {
     int i;
-    int old_max_size = node->max_size;
+    unsigned short old_max_size = node->max_size;
     if (node->max_size == 0)
-        node->max_size = 5;
+        node->max_size = 2;
     else
         node->max_size *= 2;
     int *old = node->values;
