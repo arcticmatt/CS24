@@ -49,9 +49,11 @@ struct multimap {
 };
 
 /* Variables to be used for slab allocation */
-void *memory_bank = NULL;
+void **memory_banks = NULL;
 int memory_bank_num_nodes = 0;
-int memory_bank_max_size = 0;
+const int memory_bank_max_size = 1000000;
+int memory_banks_curr_size = 0;
+int memory_banks_max_size = 0;
 
 
 /*============================================================================
@@ -71,7 +73,7 @@ int remove_mm_node_helper(multimap_node *node, multimap_node *to_remove);
 
 void free_multimap_node(multimap_node *node);
 void resize_values();
-void resize_memory_bank();
+void add_memory_bank();
 
 
 /*============================================================================
@@ -82,8 +84,15 @@ void resize_memory_bank();
  * the initial value of everything will be.
  */
 multimap_node * alloc_mm_node() {
-    if (memory_bank_num_nodes * sizeof(multimap_node) >= memory_bank_max_size)
-        resize_memory_bank();
+    /*** Get the memory bank we want to allocate into ***/
+    void *memory_bank = NULL;
+    // Check to see if we need to add a memory bank to our array of banks
+    if (memory_bank_num_nodes * sizeof(multimap_node) >= memory_bank_max_size \
+            || memory_banks_curr_size == 0) {
+        add_memory_bank();
+    }
+    memory_bank = memory_banks[memory_banks_curr_size - 1];
+
     multimap_node *node = memory_bank + memory_bank_num_nodes * sizeof(multimap_node);
     memory_bank_num_nodes++;
     bzero(node, sizeof(multimap_node));
@@ -300,10 +309,14 @@ void clear_multimap(multimap *mm) {
     assert(mm != NULL);
 
     /* Free the memory bank, reset information variables */
-    free(memory_bank);
-    memory_bank = NULL;
-    memory_bank_max_size = 0;
+    int i;
+    for (i = 0; i < memory_banks_curr_size; ++i)
+        free(memory_banks[i]);
+    free(memory_banks);
+    memory_banks = NULL;
     memory_bank_num_nodes = 0;
+    memory_banks_curr_size = 0;
+    memory_banks_max_size = 0;
 
     mm->root = NULL;
 }
@@ -431,7 +444,7 @@ void mm_traverse(multimap *mm, void (*f)(int key, int value)) {
     mm_traverse_helper(mm->root, f);
 }
 
- /* Resize the values array to be double the current max_size. Or, if max_size
+ /* Resizes the values array to be double the current max_size. Or, if max_size
   * is currently 0, just sets max_size = 10.
  */
 void resize_values(multimap_node *node) {
@@ -452,13 +465,35 @@ void resize_values(multimap_node *node) {
     node->values = new;
 }
 
-/* Resizes the memory bank to be double the current max size. Or, if max size
- * is currently 0, just sets max size to be 100000 * sizeof(multimap_node)
+/* Resizes the array of memory banks (for slab allocation of the multimap_nodes)
+ * to be double the current size. Or, if the max size is currently 0, just sets
+ * the max size to be 10.
  */
-void resize_memory_bank() {
-    if (memory_bank_max_size == 0)
-        memory_bank_max_size = 100000 * sizeof(multimap_node);
+void resize_memory_banks() {
+    int i;
+    int old_max_size = memory_banks_max_size;
+    if (memory_banks_max_size == 0)
+        memory_banks_max_size = 10;
     else
-        memory_bank_max_size *= 2;
-    memory_bank = realloc(memory_bank, memory_bank_max_size);
+        memory_banks_max_size *= 2;
+    void **old = memory_banks;
+    void **new = malloc(memory_banks_max_size * sizeof(void *));
+    /* Copy over old values */
+    for (i = 0; i < old_max_size; ++i) {
+        new[i] = old[i];
+    }
+    /* Free old array b/c we are no longer using it */
+    free(old);
+    memory_banks = new;
+}
+
+/* Adds a new memory bank of size memory_bank_max_size to the array of memory
+ * banks.
+ */
+void add_memory_bank() {
+    if (memory_banks_curr_size >= memory_banks_max_size)
+        resize_memory_banks();
+    memory_banks[memory_banks_curr_size] = malloc(memory_bank_max_size * sizeof(multimap_node));
+    memory_banks_curr_size++;
+    memory_bank_num_nodes = 0;
 }
