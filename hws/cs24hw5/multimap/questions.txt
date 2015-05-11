@@ -73,9 +73,86 @@ the most time consuming operation.
 
 e)  Explanation of your optimizations:
 
+Optimization 1: convert values linked-list to values array
+    - The cache-performance issue I address is that, in the original
+      implementation, the values were not stored in a contiguous chunk of
+      memory. This creates a large number of cache misses when we access the
+      values because they are scattered throughout main memory, which makes it
+      unlikely for entire linked lists of values to be cached.
+    - My optimization was to convert the linked list of value structs into a
+      simple integer array. To do this, I added three new members to
+      the multimap_node struct: curr_size, max_size, and values. I made
+      curr_size and max_size unsigned shorts in order to reduce the size of
+      multimap_nodes (slightly improves performance). We need curr_size to tell
+      us where to insert the next value, and we need max_size to keep track of
+      the overall size of the array. If the array ever gets too full, I simply
+      resize it by copying over the values to a newly allocated array which
+      has double the size.
+    - This mitigates the problem because it ensures that, for each key, all the
+      values are stored in a contiguous chunk of memory. This makes it much more
+      likely that the entire value arrays are cached, or at least large parts
+      of them are cached, which reduces cache misses and makes our program
+      faster.
+
+Optimization 2: use slab allocation for allocating multimap_nodes
+    - The cache-performance issue I address is that, in the original
+      implementation, the multimap_nodes were not stored in a contiguous chunk
+      of memory (they were just allocated using malloc()). Thus, when we
+      traverse the tree's nodes, we get a large number of cache misses because
+      the nodes are scattered throughout main memory, which makes it unlikely
+      that a lot of nodes will be cached at the same time.
+    - My optimization was to use slab allocation for allocating multimap_nodes.
+      This means that I create a memory bank in which I will allocate all
+      the multimap_nodes, to ensure that they are all allocated contiguously.
+      I also keep two other variables, memory_bank_num_nodes and
+      memory_bank_max_size. The former is used to return a pointer to the
+      space in the memory bank where we will allocate our next multimap_node
+      (so basically it indexes the memory bank) and the latter just keeps track
+      of the max size. If we ever run out of memory, I just double the max size
+      and use realloc().
+    - This mitigates the problem because it ensures that all the nodes are
+      stored in a contiguous chunk of memory. This makes it so that large runs
+      of nodes are cached, which reduces the number of cache misses we get when
+      we traverse the tree. In other words, since the nodes are all stored
+      in one contiguous chunk of memory, it is easier to cache them, which
+      reduces cache misses.
 
 
 f)  Output of ommperf:
+Testing multimap performance:  300000 pairs, 1000000 probes, random keys.
+Adding 300000 pairs to multimap.  Keys in range [0, 50), values in range [0, 1000).
+Probing multimap 1000000 times.  Keys in range [0, 50), values in range [0, 1000).
+Total hits:  997144/1000000 (99.7%)
+Total wall-clock time:  0.43 seconds		us per probe:  0.430 us
 
+Testing multimap performance:  300000 pairs, 1000000 probes, incrementing keys.
+Adding 300000 pairs to multimap.  Keys in range [0, 50), values in range [0, 1000).
+Probing multimap 1000000 times.  Keys in range [0, 50), values in range [0, 1000).
+Total hits:  997715/1000000 (99.8%)
+Total wall-clock time:  0.45 seconds		us per probe:  0.446 us
 
+Testing multimap performance:  300000 pairs, 1000000 probes, decrementing keys.
+Adding 300000 pairs to multimap.  Keys in range [0, 50), values in range [0, 1000).
+Probing multimap 1000000 times.  Keys in range [0, 50), values in range [0, 1000).
+Total hits:  997325/1000000 (99.7%)
+Total wall-clock time:  0.46 seconds		us per probe:  0.458 us
 
+Testing multimap performance:  15000000 pairs, 1000000 probes, random keys.
+Adding 15000000 pairs to multimap.  Keys in range [0, 100000), values in range [0, 50).
+Probing multimap 1000000 times.  Keys in range [0, 100000), values in range [0, 50).
+Total hits:  949586/1000000 (95.0%)
+Total wall-clock time:  0.55 seconds		us per probe:  0.551 us
+
+Testing multimap performance:  100000 pairs, 50000 probes, incrementing keys.
+Adding 100000 pairs to multimap.  Keys in range [0, 100000), values in range [0, 50).
+Probing multimap 50000 times.  Keys in range [0, 100000), values in range [0, 50).
+Total hits:  976/50000 (2.0%)
+Total wall-clock time:  4.34 seconds		us per probe:  86.714 us
+
+Testing multimap performance:  100000 pairs, 50000 probes, decrementing keys.
+Adding 100000 pairs to multimap.  Keys in range [0, 100000), values in range [0, 50).
+Probing multimap 50000 times.  Keys in range [0, 100000), values in range [0, 50).
+Total hits:  980/50000 (2.0%)
+Total wall-clock time:  4.39 seconds		us per probe:  87.717 us
+
+./ommperf  32.45s user 0.09s system 99% cpu 32.804 total
