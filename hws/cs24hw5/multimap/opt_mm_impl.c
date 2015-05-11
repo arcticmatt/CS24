@@ -5,7 +5,6 @@
 
 #include "multimap.h"
 
-
 /*============================================================================
  * TYPES
  *
@@ -49,6 +48,11 @@ struct multimap {
     multimap_node *root;
 };
 
+/* Variables to be used for slab allocation */
+void *memory_bank = NULL;
+int memory_bank_num_nodes = 0;
+int memory_bank_max_size = 0;
+
 
 /*============================================================================
  * HELPER FUNCTION DECLARATIONS
@@ -67,6 +71,7 @@ int remove_mm_node_helper(multimap_node *node, multimap_node *to_remove);
 
 void free_multimap_node(multimap_node *node);
 void resize_values();
+void resize_memory_bank();
 
 
 /*============================================================================
@@ -77,7 +82,10 @@ void resize_values();
  * the initial value of everything will be.
  */
 multimap_node * alloc_mm_node() {
-    multimap_node *node = malloc(sizeof(multimap_node));
+    if (memory_bank_num_nodes * sizeof(multimap_node) >= memory_bank_max_size)
+        resize_memory_bank();
+    multimap_node *node = memory_bank + memory_bank_num_nodes * sizeof(multimap_node);
+    memory_bank_num_nodes++;
     bzero(node, sizeof(multimap_node));
     /*printf("initially, curr_size = %d and max_size = %d\n", node->curr_size, node->max_size);*/
 
@@ -290,7 +298,13 @@ multimap * init_multimap() {
  */
 void clear_multimap(multimap *mm) {
     assert(mm != NULL);
-    free_multimap_node(mm->root);
+
+    /* Free the memory bank, reset information variables */
+    free(memory_bank);
+    memory_bank = NULL;
+    memory_bank_max_size = 0;
+    memory_bank_num_nodes = 0;
+
     mm->root = NULL;
 }
 
@@ -436,4 +450,15 @@ void resize_values(multimap_node *node) {
     /* Free old array b/c we are no longer using it */
     free(node->values);
     node->values = new;
+}
+
+/* Resizes the memory bank to be double the current max size. Or, if max size
+ * is currently 0, just sets max size to be 100000 * sizeof(multimap_node)
+ */
+void resize_memory_bank() {
+    if (memory_bank_max_size == 0)
+        memory_bank_max_size = 100000 * sizeof(multimap_node);
+    else
+        memory_bank_max_size *= 2;
+    memory_bank = realloc(memory_bank, memory_bank_max_size);
 }
