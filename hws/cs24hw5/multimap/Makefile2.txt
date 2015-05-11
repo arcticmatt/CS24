@@ -1,0 +1,34 @@
+# For performance testing:
+CFLAGS = -Wall -DNDEBUG -O2 -g
+
+# For debugging:
+# CFLAGS = -Wall -g -O0 -DDEBUG_ZERO
+
+CFLAGS += -m32
+INC := -I /usr/include/ -I /usr/src/vboxguest-4.3.26/vboxguest/r0drv/ -I /usr/src/vboxguest-4.3.26/vboxguest/include/
+# override is required by the Debian guys
+
+all:  mmtest mmperf ommtest ommperf
+opt:  ommtest ommperf
+
+mmtest: mmtest.o mm_impl.o
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
+
+mmperf: mmperf.o mm_impl.o
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
+
+ommtest: mmtest.o opt_mm_impl.o
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
+
+ommperf: mmperf.o opt_mm_impl.o
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
+
+opt_mm_impl.o: opt_mm_impl.c
+	@echo "Linking..."
+	@echo $(INC)
+	$(CC) $(CFLAGS) $(INC) -c -o $@ $<
+
+clean:
+	rm -f mmtest mmperf ommtest ommperf *.o *~
+
+.PHONY: all opt clean

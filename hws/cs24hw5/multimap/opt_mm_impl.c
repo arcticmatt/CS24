@@ -31,22 +31,19 @@ typedef struct multimap_node {
 
     /* The max size of the values array. */
     unsigned short max_size;
-
-    /* The left child of the multimap node.  This will reference nodes that
-     * hold keys that are strictly less than this node's key.
-     */
-    struct multimap_node *left_child;
-
-    /* The right child of the multimap node.  This will reference nodes that
-     * hold keys that are strictly greater than this node's key.
-     */
-    struct multimap_node *right_child;
 } multimap_node;
 
 
 /* The entry-point of the multimap data structure. */
 struct multimap {
-    multimap_node *root;
+    /* We use an array to store the binary tree of nodes. */
+    multimap_node **tree_list;
+
+    /* The current size of the tree array. */
+    int curr_size;
+
+    /* The max size of the tree array. */
+    int max_size;
 };
 
 
@@ -59,14 +56,25 @@ struct multimap {
 
 multimap_node * alloc_mm_node();
 
-multimap_node * find_mm_node(multimap_node *root, int key,
+multimap_node * find_mm_node(multimap *mm, int key,
                              int create_if_not_found);
 
 void remove_mm_node(multimap *mm, multimap_node *to_remove);
-int remove_mm_node_helper(multimap_node *node, multimap_node *to_remove);
-
+int remove_mm_node_helper(multimap *mm, multimap_node *to_remove, \
+        int curr_size);
 void free_multimap_node(multimap_node *node);
+
 void resize_values();
+void resize_multimap(multimap *mm);
+multimap_node *get_min_node(multimap *mm, int i);
+multimap_node *get_left_child(multimap *mm, int i);
+multimap_node *get_right_child(multimap *mm, int i);
+multimap_node *get_parent(multimap *mm, int i);
+int get_min_index(multimap *mm, int i);
+int get_left_index(int i);
+int get_right_index(int i);
+int get_parent_index(int i);
+void add_node(multimap *mm, multimap_node *node, int index);
 
 
 /*============================================================================
@@ -86,17 +94,22 @@ multimap_node * alloc_mm_node() {
 
 
 /* This helper function searches for the multimap node that contains the
- * specified key.  If such a node doesn't exist, the function can initialize
+ * specified key. If such a node doesn't exist, the function can initialize
  * a new node and add this into the structure, or it will simply return NULL.
  * The one exception is the root - if the root is NULL then the function will
  * return a new root node.
  */
-multimap_node * find_mm_node(multimap_node *root, int key,
+multimap_node * find_mm_node(multimap *mm, int key,
                              int create_if_not_found) {
+    multimap_node **tree_list = mm->tree_list;
     multimap_node *node;
+    int curr_index = 0;
+    int left_index;
+    int right_index;
 
     /* If the entire multimap is empty, the root will be NULL. */
-    if (root == NULL) {
+    if (mm->curr_size == 0) {
+        multimap_node *root;
         if (create_if_not_found) {
             root = alloc_mm_node();
             root->key = key;
@@ -105,30 +118,29 @@ multimap_node * find_mm_node(multimap_node *root, int key,
     }
 
     /* Now we know the multimap has at least a root node, so start there. */
-    node = root;
+    node = tree_list[curr_index];
     while (1) {
         if (node->key == key)
             break;
 
-        if (node->key > key) {   /* Follow left child */
-            if (node->left_child == NULL && create_if_not_found) {
+        if (node->key > key) {    /* Follow left child */
+            node = get_left_child(mm, curr_index);
+            if (node == NULL && create_if_not_found) {
                 /* No left child, but caller wants us to create a new node. */
                 multimap_node *new = alloc_mm_node();
                 new->key = key;
-
-                node->left_child = new;
+                add_node(mm, new, left_index);
             }
-            node = node->left_child;
-        }
-        else {                   /* Follow right child */
-            if (node->right_child == NULL && create_if_not_found) {
+            curr_index = left_index;
+        } else {                  /* Follow right child */
+            node = get_right_child(mm, curr_index);
+            if (node == NULL && create_if_not_found) {
                 /* No right child, but caller wants us to create a new node. */
                 multimap_node *new = alloc_mm_node();
                 new->key = key;
-
-                node->right_child = new;
+                add_node(mm, new, right_index);
             }
-            node = node->right_child;
+            curr_index = right_index;
         }
 
         if (node == NULL)
@@ -147,24 +159,29 @@ void remove_mm_node(multimap *mm, multimap_node *to_remove) {
     assert(mm != NULL);
     assert(to_remove != NULL);
 
-    if (mm->root == to_remove) {
+    int left_index, right_index;
+
+    multimap_node **tree_list = mm->tree_list;
+    if (mm->curr_size > 0 && tree_list[0] == to_remove) {
         /* The root of the multimap is the node being removed. */
 
         multimap_node *left, *right;
 
-        left = to_remove->left_child;
-        right = to_remove->right_child;
+        right_index = get_right_index(0);
+        left = get_left_child(mm, 0);
+        right = get_right_child(mm, 0);
 
-        /* If there is a right child, it must take the place of the node being
-         * removed; the left child becomes the left child of the promoted node.
+        /* If there is a right child, replace the root with the minimum-valued
+         * node in the right subtree (and delete that node).
          * Otherwise, if there is no right child, the left child is promoted.
          */
         if (right != NULL) {
-            mm->root = right;
-            right->left_child = left;
-        }
-        else {
-            mm->root = left;
+            int min_index = get_min_index(mm, right_index);
+            // Replace root
+            tree_list[0] = tree_list[min_index];
+            // Delete min node
+            free_multimap_node(tree_list[min_index]);
+            tree_list[min_index] = NULL;
         }
     }
     else {
@@ -175,9 +192,8 @@ void remove_mm_node(multimap *mm, multimap_node *to_remove) {
         /* Wrap this in an #ifndef since the compiler will complain that the
          * variable is unused otherwise.
          */
-        int found =
+        int found = 5;
 #endif
-            remove_mm_node_helper(mm->root, to_remove);
         assert(found);
     }
 
@@ -190,67 +206,24 @@ void remove_mm_node(multimap *mm, multimap_node *to_remove) {
 }
 
 
-/* This helper function recursively scans the multimap tree to identify the
- * node being removed, and update the tree structure to maintain the ordering
- * property of the structure.  (It does not try to keep the tree balanced.)
- *
- * The helper also reports whether or not the node was found in the subtree
- * rooted at node, so that we can minimize the amount of the tree that is
- * scanned.
- */
-int remove_mm_node_helper(multimap_node *node, multimap_node *to_remove) {
-    multimap_node **to_change;
-    multimap_node *left, *right;
+int remove_mm_node_helper(multimap *mm, multimap_node *to_remove,\
+        int curr_index) {
+    multimap_node *curr_node = mm->tree_list[curr_index];
+    multimap_node *left_child = get_left_child(mm, curr_index);
+    multimap_node *right_child = get_right_child(mm, curr_index);
+    int left_index = get_left_index(curr_index);
+    int right_index = get_right_index(curr_index);
 
-    if (node == NULL)
-        return 0;
-
-    assert(node != NULL);
-    assert(to_remove != NULL);
-
-    /* See if the node to remove is a child of this node.  If so, figure out
-     * if it's the left or right child, and take it from there.
-     */
-    to_change = NULL;
-    if (node->left_child == to_remove)
-        to_change = &(node->left_child);
-    else if (node->right_child == to_remove)
-        to_change = &(node->right_child);
-
-    if (to_change != NULL) {
-        /* If there is a right child, it must take the place of the node being
-         * removed; the left child becomes the left child of the promoted node.
-         * Otherwise, if there is no right child, the left child is promoted.
-         */
-
-        left = to_remove->left_child;
-        right = to_remove->right_child;
-
-        if (right != NULL) {
-            *to_change = right;
-            right->left_child = left;
-        }
-        else {
-            *to_change = left;
-        }
-
-        /* Found it! */
-        return 1;
-    }
-    else {
-        /* This node doesn't have the node-to-remove as a child, so recursively
-         * descend into the part of the tree that will have the node to remove.
-         */
-
-        multimap_node *child;
-        assert(to_remove->key != node->key);
-
-        if (to_remove->key < node->key)
-            child = node->left_child;
+    if (to_remove->key < curr_node->key) {
+        if (left_child != NULL)
+            return remove_mm_node_helper(mm, to_remove, left_index);
         else
-            child = node->right_child;
-
-        return remove_mm_node_helper(child, to_remove);
+            return 0;
+    } else if (to_remove->key > curr_node->key) {
+        if (right_child != NULL)
+            return remove_mm_node_helper(mm, to_remove, right_index);
+        else
+            return 0;
     }
 }
 
@@ -436,4 +409,95 @@ void resize_values(multimap_node *node) {
     /* Free old array b/c we are no longer using it */
     free(node->values);
     node->values = new;
+}
+
+/* Resizes the tree_list of the passed-in multimap.
+ */
+void resize_multimap(multimap *mm) {
+    int i;
+    int old_max_size = mm->max_size;
+    if (mm->max_size == 0)
+        mm->max_size = 2;
+    else
+        mm->max_size *= 2;
+    multimap_node **old = mm->tree_list;
+    multimap_node **new = calloc(mm->max_size, sizeof(multimap *));
+    /* Copy over old values */
+    for (i = 0; i < old_max_size; ++i) {
+        new[i] = old[i];
+    }
+    /* Free old array b/c we are no longer using it */
+    free(mm->tree_list);
+    mm->tree_list = new;
+}
+
+/* Adds a node into the multimap add the specificed index.
+ */
+void add_node(multimap *mm, multimap_node *node, int index) {
+    /* Make sure the multimap is large enough so that we can actually add the
+     * node
+     */
+    while (index > mm->max_size)
+        resize_multimap(mm);
+    multimap_node **tree_list = mm->tree_list;
+    // Add the node
+    tree_list[index] = node;
+    // Make sure curr_size stays up to date
+    if (index >= mm->curr_size)
+        mm->curr_size = index + 1;
+}
+
+multimap_node *get_min_node(multimap *mm, int i) {
+    int min_index = get_min_index(mm, i);
+    return mm->tree_list[min_index];
+}
+
+multimap_node *get_left_child(multimap *mm, int i) {
+    int left_index = get_left_index(i);
+    if (left_index >= mm->curr_size || left_index < 0)
+        return NULL;
+    else
+        return mm->tree_list[left_index];
+}
+
+multimap_node *get_right_child(multimap *mm, int i) {
+    int right_index = get_right_index(i);
+    if (right_index >= mm->curr_size || right_index < 0)
+        return NULL;
+    else
+        return mm->tree_list[right_index];
+}
+
+multimap_node *get_parent(multimap *mm, int i) {
+    int parent_index = get_parent_index(i);
+    if (parent_index >= mm->curr_size || parent_index < 0)
+        return NULL;
+    else
+        return mm->tree_list[parent_index];
+}
+
+int get_min_index(multimap *mm, int i) {
+    // Keep looking at the left child
+    while (get_left_child(mm, i) != NULL) {
+        i = get_left_index(i);
+    }
+    return i;
+}
+
+/* Gets index of left child (for binary tree array).
+ */
+int get_left_index(int i) {
+    return (2 * i + 1);
+}
+
+/* Gets index of right child (for binary tree array).
+ */
+int get_right_index(int i) {
+    return (2 * i + 2);
+}
+
+/* Gets index of parent node (for binary tree array).
+ */
+int get_parent_index(int i) {
+    return (i - 1) / 2;
 }
