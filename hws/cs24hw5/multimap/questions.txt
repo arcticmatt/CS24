@@ -52,7 +52,8 @@ get a lot of repeated keys. This means that the linked list of values that each
 node holds will most likely be relatively long. Thus, when we are probing for
 pairs in this tree, it will take a relatively short time to find the key, but
 finding the value may take some time because we have to iterate through the
-linked list of values.
+linked list of values. In summary, the first three tests test for probing the
+value lists.
 
 We can then observe that the last three tests have a relatively large range of
 key values and a relatively small range of value values. This means that the
@@ -62,7 +63,7 @@ keys is so large, we will find that the linked list of values for each node will
 be relatively short, because we won't get a lot of repeated keys. Thus, when we
 are probing for pairs in this tree, it will take a relatively long time to find
 the key (because there are so many), but finding the value should be a quick
-operation.
+operation. In summary, the first three tests test for probing the key nodes.
 
 In terms of the code, this means that for the first three tests, the while loop
 find_mm_node() (finds the node with associated with a given key, starting from
