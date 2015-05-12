@@ -290,7 +290,6 @@ void free_multimap_node(multimap_node *node) {
     /* Clear out what we are about to free, to expose issues quickly. */
     bzero(node, sizeof(multimap_node));
 #endif
-    free(node);
 }
 
 
@@ -310,6 +309,7 @@ void clear_multimap(multimap *mm) {
 
     /* Free the memory bank, reset information variables */
     int i;
+    free_multimap_node(mm->root);
     for (i = 0; i < memory_banks_curr_size; ++i)
         free(memory_banks[i]);
     free(memory_banks);
