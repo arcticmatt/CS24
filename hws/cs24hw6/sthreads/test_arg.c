@@ -3,7 +3,7 @@
 
 /*
  * This thread-function increments its argument and prints it over and over
- * again.
+ * again, yielding in each loop.
  */
 static void increment(void *arg) {
     while(1) {
@@ -15,7 +15,7 @@ static void increment(void *arg) {
 }
 /*
  * This thread-function decrements its argument and prints it over and over
- * again.
+ * again, yielding in each loop.
  */
 static void decrement(void *arg) {
     while(1) {

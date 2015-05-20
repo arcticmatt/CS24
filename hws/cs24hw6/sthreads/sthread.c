@@ -302,11 +302,10 @@ ThreadContext *__sthread_scheduler(ThreadContext *context) {
     // program has become deadblocked.
     current = queue_take(&ready_queue);
     if (current == NULL && queue_empty(&blocked_queue)) {
-        printf("All threads in the program have successfully completed - \
-                exit(0)\n");
+        printf("All threads in the program have successfully completed, exiting\n");
         exit(0);
     } else if (current == NULL && !queue_empty(&blocked_queue)) {
-        printf("Program has become deadlocked - exit(1)\n");
+        printf("Program has become deadlocked, exiting\n");
         exit(1);
     }
     current->state = ThreadRunning;
@@ -373,9 +372,8 @@ void __sthread_finish(void) {
  * context, as well as the memory for the Thread struct.
  */
 void __sthread_delete(Thread *threadp) {
-    // Free all pointers associated with the thread, making sure to free the
+    // Free all memory associated with the thread, making sure to free the
     // thread itself last
-    free(threadp->context);
     free(threadp->memory);
     free(threadp);
 }

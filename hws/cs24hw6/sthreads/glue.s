@@ -46,7 +46,6 @@ __sthread_schedule:
         # The scheduler will return a context to start.
         # Restore the context to resume the thread.
 __sthread_restore:
-
         # Restore the process state
         movl    %eax, %esp
         popfl               # Pop flags
@@ -80,6 +79,7 @@ __sthread_initialize_context:
         movl   %esp, %ebp
 
         movl   8(%ebp), %esp         # %esp = stack for the process
+                                     # This switches us to the passed-in stack
         movl   12(%ebp), %ecx        # %ecx = the function to start
         movl   16(%ebp), %edx        # %edx = the function's argument
 
