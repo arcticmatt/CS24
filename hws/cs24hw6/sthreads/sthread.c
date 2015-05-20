@@ -375,8 +375,8 @@ void __sthread_finish(void) {
 void __sthread_delete(Thread *threadp) {
     // Free all pointers associated with the thread, making sure to free the
     // thread itself last
-    free(threadp->memory);
     free(threadp->context);
+    free(threadp->memory);
     free(threadp);
 }
 
