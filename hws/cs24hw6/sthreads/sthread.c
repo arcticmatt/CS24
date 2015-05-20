@@ -78,19 +78,19 @@ typedef enum {
      * in this state.
      */
     ThreadRunning,
-    
+
     /*!
      * The thread is ready to run, but doesn't have access to the CPU yet.  The
      * thread will be kept in the ready-queue.
      */
     ThreadReady,
-    
+
     /*!
      * The thread is blocked and currently unable to progress, so it is not
      * scheduled on the CPU.  Blocked threads are kept in the blocked-queue.
      */
     ThreadBlocked,
-    
+
     /*!
      * The thread's function has returned, and therefore the thread is ready to
      * be permanently removed from the scheduling mechanism and deallocated.
@@ -208,7 +208,7 @@ static Thread *queue_take(Queue *queuep) {
     Thread *threadp;
 
     assert(queuep != NULL);
-    
+
     /* Return NULL if the queue is empty */
     if(queuep->head == NULL)
         return NULL;
@@ -268,11 +268,47 @@ static void queue_remove(Queue *queuep, Thread *threadp) {
  * This function is global because it needs to be called from the assembly.
  */
 ThreadContext *__sthread_scheduler(ThreadContext *context) {
+    // 1. Save the context argument into the current thread
+    current->context = context;
 
-    /* Replace these lines with your implementation */
-    /* TODO */ assert(0); /* TODO */
+    // 2. Either queue up or deallocate the current thread, based on its state
+    switch (current->state) {
+        case ThreadFinished:
+            // Delete the thread
+            __sthread_delete(current);
+            break;
+        case ThreadRunning:
+            // Change state of thread, and queue it
+            current->state = ThreadReady;
+            queue_add(current);
+            break;
+        case ThreadBlocked:
+            // Queue thread
+            queue_add(current);
+            break;
+        case ThreadReady:
+            // Should not be switching from a ready thread
+            printf("ERROR: Switching from a ready thread\n");
+            assert(0);
+            break;
+    }
 
-    /* Return the next thread to resume executing. */
+    // 3. Select a new "ready" thread to run, and set the "current" variable
+    // to that thread. If there are no ready threads and there are no blocked
+    // threads, all threads in the program have successfully completed. However,
+    // if there are one more more blocked threads in the blocked queue, the
+    // program has become deadblocked.
+    current = queue_take(&ready_queue);
+    if (current == NULL && queue_empty(&blocked_queue)) {
+        printf("All threads in the program have successfully completed - \
+                exit(0)\n");
+        exit(0);
+    } else if (current == NULL && !queue_empty(&blocked_queue)) {
+        printf("Program has become deadlocked - exit(1)\n");
+        exit(1);
+    }
+
+    // 4. Return the next thread to resume executing.
     return current->context;
 }
 
@@ -323,8 +359,11 @@ void __sthread_finish(void) {
  * context, as well as the memory for the Thread struct.
  */
 void __sthread_delete(Thread *threadp) {
-    /* Replace this function's body with your implementation */
-    /* TODO */ assert(0); /* TODO */
+    // Free all pointers associated with the thread, making sure to free the
+    // thread itself last
+    free(threadp->memory);
+    free(threadp->context);
+    free(threadp);
 }
 
 

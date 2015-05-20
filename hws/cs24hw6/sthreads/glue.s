@@ -29,7 +29,14 @@ scheduler_context:      .long   0
 __sthread_schedule:
 
         # Save the process state onto its stack
-        # TODO
+        pushl   %eax
+        pushl   %ebx
+        pushl   %ecx
+        pushl   %edx
+        pushl   %ebp
+        pushl   %esi
+        pushl   %edi
+        pushfl              # Push flags
 
         # Call the high-level scheduler with the current context as an argument
         movl    %esp, %eax
@@ -41,7 +48,16 @@ __sthread_schedule:
         # Restore the context to resume the thread.
 __sthread_restore:
 
-        # TODO
+        # Restore the process state
+        movl    %eax, %esp
+        popfl
+        popl    %edi
+        popl    %esi
+        popl    %ebp
+        popl    %edx
+        popl    %ecx
+        popl    %ebx
+        popl    %eax
 
         ret
 
