@@ -12,7 +12,7 @@
 #         12(%ebp) = pointer to an integer to receive the group ID
 #
 get_ids:
-    push   %ebp
+    push   %ebp              # Set up stack
     mov    %esp, %ebp
     mov    8(%ebp), %ecx     # %ecx = &uid
     mov    12(%ebp), %edx    # %edx = &gid
@@ -24,6 +24,6 @@ get_ids:
     int    $0x80             # Invoke system call 47 (getgid). Kernel stores
                              # process ID into eax.
     mov    %eax, (%edx)      # M[%edx] = %eax => M[&gid] = gid
-    mov    %ebp, %esp
+    mov    %ebp, %esp        # Clean up stack
     pop    %ebp
     ret

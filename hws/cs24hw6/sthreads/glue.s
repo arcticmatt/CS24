@@ -27,7 +27,6 @@ scheduler_context:      .long   0
         .align 4
         .globl __sthread_schedule
 __sthread_schedule:
-
         # Save the process state onto its stack
         pushl   %eax
         pushl   %ebx
@@ -50,7 +49,7 @@ __sthread_restore:
 
         # Restore the process state
         movl    %eax, %esp
-        popfl
+        popfl               # Pop flags
         popl    %edi
         popl    %esi
         popl    %ebp
@@ -77,9 +76,36 @@ __sthread_restore:
 #
         .globl __sthread_initialize_context
 __sthread_initialize_context:
+        pushl  %ebp                  # Set up stack
+        movl   %esp, %ebp
 
-        # TODO
+        movl   8(%ebp), %esp         # %esp = stack for the process
+        movl   12(%ebp), %ecx        # %ecx = the function to start
+        movl   16(%ebp), %edx        # %edx = the function's argument
 
+        # Now the stack pointer is pointing to the stack for the process.
+        # So we will start setting up this stack so that ret at the end of
+        # __sthread_schedule() will beging executing the specified function f
+        # with the argument arg
+        pushl  %edx                  # Push arg
+        pushl  $__sthread_finish     # Push return address
+        pushl  %ecx                  # Push function pointer
+
+        # Push registers and flags to finish properly setting up context
+        pushl   %eax
+        pushl   %ebx
+        pushl   %ecx
+        pushl   %edx
+        pushl   %ebp
+        pushl   %esi
+        pushl   %edi
+        pushfl                       # Push flags
+
+        movl   %esp, %eax            # Return a poiner to the newly initialized
+                                     # context
+
+        mov    %ebp, %esp            # Clean up stack
+        pop    %ebp
         ret
 
 #

@@ -268,29 +268,31 @@ static void queue_remove(Queue *queuep, Thread *threadp) {
  * This function is global because it needs to be called from the assembly.
  */
 ThreadContext *__sthread_scheduler(ThreadContext *context) {
-    // 1. Save the context argument into the current thread
-    current->context = context;
-
-    // 2. Either queue up or deallocate the current thread, based on its state
-    switch (current->state) {
-        case ThreadFinished:
-            // Delete the thread
-            __sthread_delete(current);
-            break;
-        case ThreadRunning:
-            // Change state of thread, and queue it
-            current->state = ThreadReady;
-            queue_add(current);
-            break;
-        case ThreadBlocked:
-            // Queue thread
-            queue_add(current);
-            break;
-        case ThreadReady:
-            // Should not be switching from a ready thread
-            printf("ERROR: Switching from a ready thread\n");
-            assert(0);
-            break;
+    // Check if we actually have a context to work with
+    if (context != NULL) {
+        // 1. Save the context argument into the current thread
+        current->context = context;
+        // 2. Either queue up or deallocate the current thread, based on its state
+        switch (current->state) {
+            case ThreadFinished:
+                // Delete the thread
+                __sthread_delete(current);
+                break;
+            case ThreadRunning:
+                // Change state of thread, and queue it
+                current->state = ThreadReady;
+                queue_add(current);
+                break;
+            case ThreadBlocked:
+                // Queue thread
+                queue_add(current);
+                break;
+            case ThreadReady:
+                // Should not be switching from a ready thread
+                printf("ERROR: Switching from a ready thread\n");
+                assert(0);
+                break;
+        }
     }
 
     // 3. Select a new "ready" thread to run, and set the "current" variable
@@ -307,6 +309,7 @@ ThreadContext *__sthread_scheduler(ThreadContext *context) {
         printf("Program has become deadlocked - exit(1)\n");
         exit(1);
     }
+    current->state = ThreadRunning;
 
     // 4. Return the next thread to resume executing.
     return current->context;
@@ -332,9 +335,20 @@ void sthread_start(void)
  * structure, and it adds the thread to the Ready queue.
  */
 Thread * sthread_create(void (*f)(void *arg), void *arg) {
-    /* Replace this function's body with your implementation */
-    /* TODO */ assert(0); /* TODO */
-    return NULL;
+    // Allocate memory for the thread's stack and the thread itself
+    void *memory = malloc(DEFAULT_STACKSIZE);
+    Thread *thread = malloc(sizeof(Thread));
+
+    // Set thread's variables
+    thread->memory = memory;
+    thread->state = ThreadReady;
+    thread->context = __sthread_initialize_context(memory + DEFAULT_STACKSIZE,
+            f, arg);
+
+    // Add thread to ready queue
+    queue_add(thread);
+
+    return thread;
 }
 
 
