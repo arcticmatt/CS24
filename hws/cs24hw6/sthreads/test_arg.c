@@ -31,9 +31,8 @@ static void decrement(void *arg) {
  */
 int main(int argc, char **argv) {
     int a = 0;
-    int b = 0;
     sthread_create(increment, &a);
-    sthread_create(decrement, &b);
+    sthread_create(decrement, &a);
     sthread_start();
     return 0;
 }
