@@ -28,15 +28,19 @@ scheduler_lock:         .long   0
 #
         .globl __sthread_lock
 __sthread_lock:
-        # TODO: currently this code always returns 1 (it always grants
-        # the lock).  Fix this code, using the "scheduler_lock" variable
-        # to ensure mutual exlucsion.
-        movl    $1, %eax
+        # Atomically move the scheduler_lock value into %eax
+        movl    scheduler_lock, %eax
+        # Now set scheduler_lock = 1 (since this is always true at the end
+        # of this method)
+        movl    $1, scheduler_lock
+        # Return the inverse of the old value of scheduler_lock
+        not     %eax
         ret
 
         .globl __sthread_unlock
 __sthread_unlock:
-        # TODO: release the lock.
+        # To release the lock, just set scheduler_lock = 0
+        movl    $0, scheduler_lock
         ret
 
 #
