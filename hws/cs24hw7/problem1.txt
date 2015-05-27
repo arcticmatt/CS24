@@ -1,0 +1,16 @@
+The problem is that only results from producer 0 are being consumed and
+outputted. This happens because we are using cooperative thread execution,
+which is not fair in this program. Cooperative thread execution is not fair
+in this program because it never allows the second producer thread to do
+anything but yield. This happens for the following reason. Upon starting the
+thread scheduler, the first producer thread will start running. This means
+that bounded_buffer_add will keep on being called until the buffer array is
+full; when that happens, the first producer thread will yield to the second
+producer thread. However, now the buffer array is full, so the second producer
+thread will yield to the consumer thread. Then, the consumer thread will keep
+on calling bounded_buffer_take until the buffer array is empty; when that
+happens, the consumder thread will yield back to the first producer thread.
+Then, the same thing will happen again and again. The first producer thread will
+fill the buffer array and yield, which will make the second producer thread
+yield, and so on and so forth. So this is why cooperative thread execution is
+not fair in this program.
