@@ -286,7 +286,11 @@ void sthread_start(int timer) {
     if(timer)
         start_timer();
 
+    // TODO: explain
+    __sthread_lock();
     __sthread_start();
+    // TODO: explain
+    /*__sthread_unlock();*/
 }
 
 /*
@@ -333,10 +337,13 @@ Thread * sthread_create(void (*f)(void *arg), void *arg) {
  * This function is global because it needs to be referenced from assembly.
  */
 void __sthread_finish(void) {
+    // TODO: explain
     __sthread_lock();
     printf("Thread 0x%08x has finished executing.\n", (unsigned int) current);
     current->state = ThreadFinished;
     __sthread_schedule();
+    // TODO: explain
+    /*__sthread_unlock();*/
 }
 
 
@@ -367,7 +374,11 @@ Thread * sthread_current() {
  * run.
  */
 void sthread_yield() {
+    // TODO: explain
+    __sthread_lock();
     __sthread_schedule();
+    // TODO: explain
+    /*__sthread_unlock();*/
 }
 
 
@@ -376,8 +387,12 @@ void sthread_yield() {
  * to Blocked, and call the scheduler.
  */
 void sthread_block() {
+    // TODO: explain
+    __sthread_lock();
     current->state = ThreadBlocked;
     __sthread_schedule();
+    // TODO: explain
+    /*__sthread_unlock();*/
 }
 
 

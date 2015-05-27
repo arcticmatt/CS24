@@ -28,13 +28,13 @@ scheduler_lock:         .long   0
 #
         .globl __sthread_lock
 __sthread_lock:
-        # Atomically move the scheduler_lock value into %eax
-        movl    scheduler_lock, %eax
-        # Now set scheduler_lock = 1 (since this is always true at the end
-        # of this method)
-        movl    $1, scheduler_lock
+        movl    $1, %eax                # %eax = 1
+        # Atomically set $eax = scheduler_lock (old value) and
+        # scheduler_lock = 1 (since this is always true at the end of this
+        # method)
+        lock xchgl   %eax, scheduler_lock
         # Return the inverse of the old value of scheduler_lock
-        not     %eax
+        xor     $1, %eax
         ret
 
         .globl __sthread_unlock
@@ -77,6 +77,8 @@ __sthread_restore:
         movl    %eax, %esp
         popa
         popfl
+
+        call    __sthread_unlock
 
         ret
 
