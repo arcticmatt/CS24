@@ -15,6 +15,11 @@
 typedef struct _semaphore Semaphore;
 
 /*
+ * ThreadWrapper handle.
+ */
+typedef struct _threadwrapper ThreadWrapper;
+
+/*
  * Create a new seamphore.
  * The argument is the initial value of the semaphore.
  */
@@ -30,6 +35,16 @@ void semaphore_wait(Semaphore *semp);
  * Increment the semaphore.
  */
 void semaphore_signal(Semaphore *semp);
+
+/*
+ * Add the passed-in thread to the blocked queue of the passed-in semaphore.
+ */
+void enqueue(Semaphore *semp, Thread *thread);
+
+/*
+ * Dequeue from the blocked queue of the passed-in semaphore.
+ */
+ThreadWrapper * dequeue(Semaphore *semp);
 
 #endif /* _SEMAPHORE_H */
 
