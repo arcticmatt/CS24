@@ -39,7 +39,8 @@ __sthread_lock:
 
         .globl __sthread_unlock
 __sthread_unlock:
-        # To release the lock, just set scheduler_lock = 0
+        # To release the lock, just set scheduler_lock = 0. movl is atomic,
+        # so no need to worry about locking
         movl    $0, scheduler_lock
         ret
 
@@ -78,6 +79,8 @@ __sthread_restore:
         popa
         popfl
 
+        # We unlock after every call to the scheduler so that the timer can
+        # interrupt and switch threads for execution
         call    __sthread_unlock
 
         ret

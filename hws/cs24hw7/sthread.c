@@ -283,14 +283,16 @@ ThreadContext *__sthread_scheduler(ThreadContext *context) {
  * Start the scheduler.
  */
 void sthread_start(int timer) {
+    // Lock the thread here because __sthread_start() calls scheduler. We lock
+    // the thread so that the timer cannot interrupt this method, which ensures
+    // that at most one thread is executing in the scheduler at any time.
+    // Note that unlock gets called in the assembly code.
+    __sthread_lock();
+
     if(timer)
         start_timer();
 
-    // TODO: explain
-    __sthread_lock();
     __sthread_start();
-    // TODO: explain
-    /*__sthread_unlock();*/
 }
 
 /*
@@ -300,6 +302,16 @@ void sthread_start(int timer) {
  * structure, and it adds the thread to the Ready queue.
  */
 Thread * sthread_create(void (*f)(void *arg), void *arg) {
+    // Lock the thread here because we are modifying the queue. We lock
+    // the thread so that the timer cannot interrupt this method, which ensures
+    // that at most one thread is modifying the queue at a time. Otherwise, we
+    // could get issues where we get interrupted in the middle of adding to the
+    // queue, which could mess up the structure of the queue (in different ways,
+    // depending on where the interruption happens). For example, you could get
+    // interrupted before queuep->tail = threadp gets called, which would
+    // cause the next call to queue_append to function incorrectly.
+    __sthread_lock();
+
     Thread *threadp;
     void *memory;
 
@@ -324,6 +336,10 @@ Thread * sthread_create(void (*f)(void *arg), void *arg) {
         (char *) memory + DEFAULT_STACKSIZE, f, arg);
     queue_add(threadp);
 
+    // Unlock because we locked at the beginning of this method, and we never
+    // call __sthread_schedule (which usually unlocks for us)
+    __sthread_unlock();
+
     return threadp;
 }
 
@@ -337,13 +353,14 @@ Thread * sthread_create(void (*f)(void *arg), void *arg) {
  * This function is global because it needs to be referenced from assembly.
  */
 void __sthread_finish(void) {
-    // TODO: explain
+    // Lock the thread here because we call scheduler. We lock
+    // the thread so that the timer cannot interrupt this method, which ensures
+    // that at most one thread is executing in the scheduler at any time.
+    // Note that unlock gets called in the assembly code.
     __sthread_lock();
     printf("Thread 0x%08x has finished executing.\n", (unsigned int) current);
     current->state = ThreadFinished;
     __sthread_schedule();
-    // TODO: explain
-    /*__sthread_unlock();*/
 }
 
 
@@ -374,11 +391,12 @@ Thread * sthread_current() {
  * run.
  */
 void sthread_yield() {
-    // TODO: explain
+    // Lock the thread here because we call scheduler. We lock
+    // the thread so that the timer cannot interrupt this method, which ensures
+    // that at most one thread is executing in the scheduler at any time.
+    // Note that unlock gets called in the assembly code.
     __sthread_lock();
     __sthread_schedule();
-    // TODO: explain
-    /*__sthread_unlock();*/
 }
 
 
@@ -387,12 +405,13 @@ void sthread_yield() {
  * to Blocked, and call the scheduler.
  */
 void sthread_block() {
-    // TODO: explain
+    // Lock the thread here because we call scheduler. We lock
+    // the thread so that the timer cannot interrupt this method, which ensures
+    // that at most one thread is executing in the scheduler at any time.
+    // Note that unlock gets called in the assembly code.
     __sthread_lock();
     current->state = ThreadBlocked;
     __sthread_schedule();
-    // TODO: explain
-    /*__sthread_unlock();*/
 }
 
 
@@ -401,6 +420,16 @@ void sthread_block() {
  * the ready queue.
  */
 void sthread_unblock(Thread *threadp) {
+    // Lock the thread here because we are modifying the queue. We lock
+    // the thread so that the timer cannot interrupt this method, which ensures
+    // that at most one thread is modifying the queue at a time. Otherwise, we
+    // could get issues where we get interrupted in the middle of modifying the
+    // queue, which could mess up the structure of the queue (in different ways,
+    // depending on where the interruption happens). For example, you could get
+    // interrupted before queuep->tail = threadp gets called, which would
+    // cause the next call to queue_append to function incorrectly.
+    __sthread_lock();
+
     /* Make sure the thread was blocked */
     assert(threadp != NULL);
     assert(threadp->state == ThreadBlocked);
@@ -411,5 +440,9 @@ void sthread_unblock(Thread *threadp) {
     /* Re-queue it */
     threadp->state = ThreadReady;
     queue_add(threadp);
+
+    // Unlock because we locked at the beginning of this method, and we never
+    // call __sthread_schedule (which usually unlocks for us)
+    __sthread_unlock();
 }
 

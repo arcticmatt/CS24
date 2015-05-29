@@ -34,6 +34,9 @@ struct _threadwrapper {
  * The queue has a pointer to the head and the last element. The only difference
  * between this queue and the queue in sthread.c is that we store ThreadWrappers
  * here.
+ *
+ * This queue is used to hold the ThreadWrappers that this semaphore has
+ * blocked.
  */
 typedef struct _squeue {
     ThreadWrapper *head;
@@ -80,6 +83,10 @@ Semaphore *new_semaphore(int init) {
     semp = malloc(sizeof(Semaphore));
     semp->count = init;
 
+    // Allocate and initialize SQueue, add it to semaphore
+    SQueue *queue = malloc(sizeof(SQueue));
+    semp->queue_b = queue;
+
     return semp;
 }
 
@@ -89,24 +96,27 @@ Semaphore *new_semaphore(int init) {
  */
 void semaphore_wait(Semaphore *semp) {
     // This operation must be atomic, so get a lock before attempting it
-    int lock_result = __sthread_lock();
-    while (lock_result == 0) {
-        lock_result = __sthread_lock();
-    }
+    __sthread_lock();
 
-    if (semp->count == 0) {
-        // If the count is 0, block the thread. Don't increment the semp's
-        // counter because we don't want to make it go negative
-        sthread_block();
+    assert(semp->count >= 0);
+
+    // Loop in case count gets decremented between blocking the thread and
+    // acquiring the lock
+    while (semp->count == 0) {
         // Add the blocked thread to the semaphore's queue
         enqueue(semp, sthread_current());
-    } else {
-        // Else, just decrement the semp's counter
-        (semp->count)--;
+        // Then, block the thread. Don't decrement the semp's
+        // counter for now because we don't want to make it go negative
+        sthread_block();
+        // Reacquire the lock because sthread_block unlocks
+        __sthread_lock();
     }
 
-    // Make sure to unlock, because we got a lock at the beginning of this
-    // method
+    // Decrement the semp's counter
+    (semp->count)--;
+
+    // Make sure to unlock, because we got a lock at the beginning or middle of
+    // this method
     __sthread_unlock();
 }
 
@@ -116,18 +126,14 @@ void semaphore_wait(Semaphore *semp) {
  */
 void semaphore_signal(Semaphore *semp) {
     // This operation must be atmoic, so get a lock before attempting it
-    int lock_result = __sthread_lock();
-    while (lock_result == 0) {
-        lock_result = __sthread_lock();
-    }
+    __sthread_lock();
 
     // Just increment the semp's counter
     (semp->count)++;
 
     // Now, if a thread is blocked on this sempaphore, unblock one of them.
     // Do this fairly by retrieving the blocked thread to resume from the front
-    // of the queue. Also, remove the thread from the blocked queue in
-    // sthread.c
+    // of the queue.
     ThreadWrapper *thread_wrapper = dequeue(semp);
     if (thread_wrapper != NULL && thread_wrapper->thread != NULL) {
         sthread_unblock(thread_wrapper->thread);
@@ -173,7 +179,7 @@ ThreadWrapper * dequeue(Semaphore *semp) {
     if (queue->head == NULL)
         return NULL;
 
-    /* Go to the final element */
+    /* Go to the head element */
     thread_wrapper = queue->head;
     if (thread_wrapper == queue->tail) {
         // Set head and tail to NULL
@@ -184,5 +190,6 @@ ThreadWrapper * dequeue(Semaphore *semp) {
         thread_wrapper->next->prev = NULL;
         queue->head = thread_wrapper->next;
     }
+
     return thread_wrapper;
 }

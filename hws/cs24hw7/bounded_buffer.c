@@ -87,6 +87,7 @@ BoundedBuffer *new_bounded_buffer(int length) {
      */
     Semaphore *semp_take = new_semaphore(0);
 
+    // Set the semaphores of the buffer to be the semaphores we just initialized
     bufp->semp_add = semp_add;
     bufp->semp_take = semp_take;
 
@@ -103,9 +104,15 @@ void bounded_buffer_add(BoundedBuffer *bufp, const BufferElem *elem) {
      */
     semaphore_wait(bufp->semp_add);
 
+    // This operation must be atomic, so get a lock before attempting it
+    __sthread_lock();
+
     /* Now the buffer has space */
     bufp->buffer[(bufp->first + bufp->count) % bufp->length] = *elem;
     bufp->count++;
+
+    // Make sure to unlock, because we got a lock at the beginning
+    __sthread_unlock();
 
     /*
      * Upon succesfully adding an element, increment the take semaphore because
@@ -125,11 +132,17 @@ void bounded_buffer_take(BoundedBuffer *bufp, BufferElem *elem) {
      */
     semaphore_wait(bufp->semp_take);
 
+    // This operation must be atomic, so get a lock before attempting it
+    __sthread_lock();
+
     /* Copy the element from the buffer, and clear the record */
     *elem = bufp->buffer[bufp->first];
     bufp->buffer[bufp->first] = empty;
     bufp->count--;
     bufp->first = (bufp->first + 1) % bufp->length;
+
+    // Make sure to unlock, because we got a lock at the beginning
+    __sthread_unlock();
 
     /*
      * Upon succesfully taking an element, increment the add semaphore because
