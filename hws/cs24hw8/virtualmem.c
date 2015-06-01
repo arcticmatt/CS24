@@ -460,6 +460,51 @@ void map_page(page_t page, unsigned initial_perm) {
      * fail.)
      */
 
+    void *page_addr = page_to_addr(page);
+    void *mapped_addr;
+    /*
+     * Set read and write permissions because we read and write to the page
+     * later.
+     * Set flags to force mmap() to use addr as the starting address and to use
+     * the anonymous file (which sets the region to all zeros).
+     */
+    mapped_addr = mmap(addr, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_FIXED | \
+            MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    if (mapped_addr == (void *) -1) {
+        perror("mmap");
+        abort();
+    }
+
+    /*
+     * Seek to the start of the corresponding slot in the swap file, and
+     * read the slot's contents into the page we just mapped.
+     */
+    if (lseek(fd_swapfile, page * PAGE_SIZE, SEEK_SET) == -1) {
+        perror("lseek");
+        abort();
+    }
+
+    int rc;
+    rc = read(fd_swapfile, mapped_addr, PAGE_SIZE);
+    if (rc == -1) {
+        perror("read");
+        abort();
+    }
+    if (rc != PAGE_SIZE) {
+        fprintf(stderr, "read: only read %d bytes (%d expected)\n",
+                rc, PAGE_SIZE);
+        abort();
+    }
+
+    /*
+     * Update the page table entry for the page to be resident, and set the
+     * appropriate permissions on the page using the set_page_permissions()
+     * function.
+     */
+    set_page_resident(page);
+    set_page_permission(page, initial_perm);
+
+
     assert(is_page_resident(page));  /* Now it should be mapped! */
     num_loads++;
 
