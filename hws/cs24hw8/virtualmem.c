@@ -552,6 +552,47 @@ void unmap_page(page_t page) {
      * Finally, the page's Page Table Entry should be cleared.
      */
 
+    const void *page_addr = page_to_addr(page);
+
+    /*
+     * If the page is dirty, seek to the start of the corresponding slot in
+     * the swap file using lseek(), then save the page's contents to the slot.
+     */
+    if (is_page_dirty(page)) {
+        if (lseek(fd_swapfile, page * PAGE_SIZE, SEEK_SET) == -1) {
+            perror("lseek");
+            abort();
+        }
+
+        int wc;
+        // Make sure we are able to write to this page
+        set_page_permission(page, PROT_READ | PROT_WRITE);
+        wc = write(fd_swapfile, page_addr, PAGE_SIZE);
+        if (wc == -1) {
+            perror("write");
+            abort();
+        }
+        if (wc != PAGE_SIZE) {
+            fprintf(stderr, "write: only wrote %d bytes (%d expected)\n",
+                wc, PAGE_SIZE);
+            abort();
+        }
+
+        // Page is not longer dirty, clear the dirty bit
+        clear_page_dirty(page);
+    }
+
+    /*
+     * Use the munmap() function to remove the page's address-range from the
+     * process' virtual address space.
+     */
+    munmap((void *) page_addr, PAGE_SIZE);
+
+    /*
+     * Update the page table entry for the page to be "not resident"
+     */
+    clear_page_entry(page);
+
     assert(!is_page_resident(page));
     num_resident--;
 
