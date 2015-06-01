@@ -568,7 +568,7 @@ static void sigsegv_handler(int signum, siginfo_t *infop, void *data) {
      * page is simply unmapped (SEGV_MAPERR), or if the page is mapped but the
      * access itself was not permitted (SEGV_ACCERR).
      *
-     * If the address is unmapped (SEGV_ACCERR), you will need to map the
+     * If the address is unmapped (SEGV_MAPERR), you will need to map the
      * corresponding page into memory.  Make sure to respect the physical
      * memory constraints by evicting a page if there are already max_resident
      * pages loaded.  You can do something like this to evict a page:
