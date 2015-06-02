@@ -124,7 +124,7 @@ static pagelist_t pagelist;
 
 /* Initialize the policy.  Return 0 for success, -1 for failure. */
 int policy_init() {
-    fprintf(stderr, "Using RANDOM eviction policy.\n\n");
+    fprintf(stderr, "Using FIFO eviction policy.\n\n");
     pagelist.head = NULL;
     pagelist.tail = NULL;
     return 0;
@@ -159,27 +159,15 @@ void policy_timer_tick() {
 }
 
 
-/* Choose a random page from the list of mapped pages, to evict.  Since we
- * use a linked list, use Reservoir Sampling to randomly select a page from
- * the list with a uniform probability.
+/* Choose a page from the front of the queue (the linked list) to evict. This
+ * is very simple, since we keep track of the head of the linked list.
+ *
+ * This, in effect, gives us a FIFO page-replacement policy.
  */
 page_t choose_victim_page() {
-    page_t victim;
-    int i;
-    pageinfo_t *pginfo;
-
     assert(pagelist.head != NULL);
 
-    victim = pagelist.head->page;
-    i = 2;
-    pginfo = pagelist.head->next;
-    while (pginfo != NULL) {
-        if (rand() % i == 0)
-            victim = pginfo->page;
-
-        i++;
-        pginfo = pginfo->next;
-    }
+    page_t victim = pagelist.head->page;
 
 #if VERBOSE
     fprintf(stderr, "Choosing victim page %u to evict.\n", victim);

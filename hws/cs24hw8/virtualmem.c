@@ -736,5 +736,3 @@ static void sigalrm_handler(int signum, siginfo_t *infop, void *data) {
      */
     policy_timer_tick();
 }
-
-

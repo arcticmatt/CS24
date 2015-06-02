@@ -124,7 +124,7 @@ static pagelist_t pagelist;
 
 /* Initialize the policy.  Return 0 for success, -1 for failure. */
 int policy_init() {
-    fprintf(stderr, "Using RANDOM eviction policy.\n\n");
+    fprintf(stderr, "Using CLRU eviction policy.\n\n");
     pagelist.head = NULL;
     pagelist.tail = NULL;
     return 0;
@@ -155,31 +155,63 @@ void policy_page_unmapped(page_t page) {
 
 /* This function is called when the virtual memory system has a timer tick. */
 void policy_timer_tick() {
-    /* Do nothing! */
+    pageinfo_t *pginfo, *prev;
+
+    pginfo = pagelist.head;
+    prev = NULL;
+
+    /*
+     * Loop through all resident pages in the queue. If a page has been
+     * accessed, clear the access bit and move it to the back of the queue.
+     *
+     * Else, just update the pointers.
+     */
+    while (pginfo != NULL) {
+        if (is_page_accessed(pginfo->page)) {
+            // Clear access bit
+            clear_page_accessed(pginfo->page);
+            // Set page permission so we can set the access bit again
+            set_page_permission(pginfo->page, PAGEPERM_NONE);
+            // Update next pointer of previous pginfo
+            if (prev != NULL) {
+                prev->next = pginfo->next;
+            }
+            /* Move current pginfo to tail and update pginfo pointer */
+            assert(pagelist.tail != NULL); // Since we are in the while loop...
+            if (pginfo != pagelist.tail) {
+                pageinfo_t *next = pginfo->next;
+                // If we are moving the previous head to the tail, update
+                // pagelist.head
+                if (prev == NULL) {
+                    pagelist.head = next;
+                }
+                pginfo->next = NULL;
+                pagelist.tail->next = pginfo;
+                pagelist.tail = pginfo;
+                pginfo = next;
+            }
+        } else {
+            prev = pginfo;
+            pginfo = pginfo->next;
+        }
+    }
 }
 
 
-/* Choose a random page from the list of mapped pages, to evict.  Since we
- * use a linked list, use Reservoir Sampling to randomly select a page from
- * the list with a uniform probability.
+/* Choose a page from the front of the queue (the linked list) to evict. This
+ * is very simple, since we keep track of the head of the linked list.
+ *
+ * Since we keep "recently" accessed pages towards the back of the queue
+ * (this is implemented in policy_timer_tick), taking a page from the front
+ * of the queue will usually evict a page that hasn't been accessed very
+ * recently.
+ *
+ * This, in effect, gives us a CLRU page-replacement policy.
  */
 page_t choose_victim_page() {
-    page_t victim;
-    int i;
-    pageinfo_t *pginfo;
-
     assert(pagelist.head != NULL);
 
-    victim = pagelist.head->page;
-    i = 2;
-    pginfo = pagelist.head->next;
-    while (pginfo != NULL) {
-        if (rand() % i == 0)
-            victim = pginfo->page;
-
-        i++;
-        pginfo = pginfo->next;
-    }
+    page_t victim = pagelist.head->page;
 
 #if VERBOSE
     fprintf(stderr, "Choosing victim page %u to evict.\n", victim);
