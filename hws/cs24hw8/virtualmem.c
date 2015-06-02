@@ -434,8 +434,7 @@ void map_page(page_t page, unsigned initial_perm) {
         abort();
     }
 
-    /* ==== TODO:  IMPLEMENT =================================================
-     *
+    /*
      * This function must use mmap() to update the process' virtual address
      * space to make the page's address range valid.  After this is done, the
      * function must load the page's contents from the swap file.
@@ -468,8 +467,8 @@ void map_page(page_t page, unsigned initial_perm) {
      * Set flags to force mmap() to use addr as the starting address and to use
      * the anonymous file (which sets the region to all zeros).
      */
-    mapped_addr = mmap(addr, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_FIXED | \
-            MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    mapped_addr = mmap(page_addr, PAGE_SIZE, PROT_READ | PROT_WRITE, \
+            MAP_FIXED | MAP_SHARED | MAP_ANONYMOUS, -1, 0);
     if (mapped_addr == (void *) -1) {
         perror("mmap");
         abort();
@@ -527,8 +526,7 @@ void unmap_page(page_t page) {
     assert(num_resident > 0);
     assert(is_page_resident(page));
 
-    /* ==== TODO:  IMPLEMENT =================================================
-     *
+    /*
      * This function must use munmap() to remove the page's address range from
      * the process' virtual address space.
      *
@@ -566,7 +564,7 @@ void unmap_page(page_t page) {
 
         int wc;
         // Make sure we are able to write to this page
-        set_page_permission(page, PROT_READ | PROT_WRITE);
+        set_page_permission(page, PAGEPERM_RDWR);
         wc = write(fd_swapfile, page_addr, PAGE_SIZE);
         if (wc == -1) {
             perror("write");
@@ -648,8 +646,7 @@ static void sigsegv_handler(int signum, siginfo_t *infop, void *data) {
      * this may result in some other page being unmapped.
      */
 
-    /* ==== TODO:  IMPLEMENT =================================================
-     *
+    /*
      * Examine the value of infop->si_code to determine if the corresponding
      * page is simply unmapped (SEGV_MAPERR), or if the page is mapped but the
      * access itself was not permitted (SEGV_ACCERR).
@@ -699,23 +696,23 @@ static void sigsegv_handler(int signum, siginfo_t *infop, void *data) {
          * Give no permissions initially, so we can tell when page is initially
          * accessed.
          */
-        map_page(page, PROT_NONE);
+        map_page(page, PAGEPERM_NONE);
     } else if (infop->si_code == SEGV_ACCERR) {
         /* Deal with ACCERR */
 
         assert(is_page_resident(page));
         int perm = get_page_permission(page);
-        if (perm == PROT_NONE) {
+        if (perm == PAGEPERM_NONE) {
             // If the permissions were NONE and we segfault, we know we
-            // accessed the page
+            // will access the page upon retry.
             set_page_accessed(page);
-            set_page_permission(page, PROT_READ);
-        } else if (perm == PROT_READ) {
+            set_page_permission(page, PAGEPERM_READ);
+        } else if (perm == PAGEPERM_READ) {
             // If the permissions were READ and we segfault, we know we
-            // will modify the page
+            // will modify the page upon retry.
             set_page_accessed(page);
             set_page_dirty(page);
-            set_page_permission(page, PROT_WRITE | PROT_READ);
+            set_page_permission(page, PAGEPERM_RDWR);
         }
     }
 }
