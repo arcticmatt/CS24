@@ -682,6 +682,42 @@ static void sigsegv_handler(int signum, siginfo_t *infop, void *data) {
      * and then call abort() so that your code will fail visibly.  This will
      * greatly aid in debugging.
      */
+
+    if (infop->si_code == SEGV_MAPERR) {
+        /* Deal with MAPERR */
+
+        /* See if we need to unmap a page */
+        assert(num_resident <= max_resident);
+        if (num_resident == max_resident) {
+            page_t victim = choose_victim_page();
+            assert(is_page_resident(victim));
+            unmap_page(victim);
+            assert(!is_page_resident(victim));
+        }
+
+        /*
+         * Give no permissions initially, so we can tell when page is initially
+         * accessed.
+         */
+        map_page(page, PROT_NONE);
+    } else if (infop->si_code == SEGV_ACCERR) {
+        /* Deal with ACCERR */
+
+        assert(is_page_resident(page));
+        int perm = get_page_permission(page);
+        if (perm == PROT_NONE) {
+            // If the permissions were NONE and we segfault, we know we
+            // accessed the page
+            set_page_accessed(page);
+            set_page_permission(page, PROT_READ);
+        } else if (perm == PROT_READ) {
+            // If the permissions were READ and we segfault, we know we
+            // will modify the page
+            set_page_accessed(page);
+            set_page_dirty(page);
+            set_page_permission(page, PROT_WRITE | PROT_READ);
+        }
+    }
 }
 
 
