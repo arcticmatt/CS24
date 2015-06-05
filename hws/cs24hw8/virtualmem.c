@@ -584,7 +584,12 @@ void unmap_page(page_t page) {
      * Use the munmap() function to remove the page's address-range from the
      * process' virtual address space.
      */
-    munmap((void *) page_addr, PAGE_SIZE);
+    int unmap_result;
+    unmap_result = munmap((void *) page_addr, PAGE_SIZE);
+    if (unmap_result == -1) {
+        perror("munmap");
+        abort();
+    }
 
     /*
      * Update the page table entry for the page to be "not resident"
