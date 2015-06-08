@@ -1,0 +1,55 @@
+===== Problem 1 =====
+
+int counter = 0;
+
+int main() {
+    int i;
+
+    for (i = 0; i < 2; i++) {
+        fork();
+        counter++;
+        printf("counter = %d\n", counter);
+    }
+    printf("counter = %d\n", counter);
+    return 0;
+}
+
+a)
+
+The value of counter is printed 10 times. We see the every time through the
+for-loop, fork() is called. This means every time through the for-loop, we
+create a new child process. Thus, we get the following behavior:
+
+The parent process prints 3 times, twice inside the for-loop and once outside.
+This is normal behavior.
+
+We get a child process spawned from the parent when i = 0.  This will print once
+when i = 0. Then, it will spawn another child process when i = 1, print again in
+the for-loop, and print once outside the for-loop. So that is 3 prints for this
+child process.
+
+    The child process spawned from this child process prints inside the for-loop
+    when i = 1, then once outside the for-loop. So that is 2 prints for this
+    child process.
+
+We geta child process spawned from the parent when i = 1. This will print
+once when i = 1, then once again outside the for-loop. So that is 2 prints for
+this child process.
+
+So overall we have 3 + 3 + 2 + 2 = 10 prints.
+
+b)
+
+The value of counter printed in the first line is 1. This value is always
+printed because after the first fork() and counter++, all running processes have
+counter = 1. This is because each process sees its own copy of the variable.
+So it doesn't matter which process prints; the value of counter will be 1.
+
+c)
+
+The value of counter printed in the last line is 2. This value is always printed
+because in every process, the last print statement is the print statement
+outside the for-loop (see answer to part a) for more detail). And at this point,
+count is always 2 (again, because each process sees its own copy of the
+variable). So no matter which process ends up finishing, this is the print
+statement with which we will always end, and thus 2 will always be printed last.
