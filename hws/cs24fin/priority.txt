@@ -1,0 +1,65 @@
+a)
+
+The first thing the H tries to do is to acquire the lock on R. What happens
+after this is the following. L is already running, and has a lock on R. This
+means that when H tries to acquire the lock on R, it will fail, because
+L already has that lock. In other words, H cannot run. But the only other
+process that is ready is M. This means that the scheduler will stop L and run
+M ahead of H (it will run M even though L is already running b/c M is ready
+and is of higher priority). The problem here is that since L is stopped, it
+never releases its lock on L, which means that H cannot obtain it and cannot
+run. Thus, H is now stuck behind M, and will only be allowed to run after
+M has completed (which takes a very long time). Moreover, H is also stuck behind
+L. Once M finishes, L still holds the lock on R. So when the scheduler is trying
+to schedule between H and L, it will try to run H; however, H still cannot run
+because it cannot acquire the lock on R. So the scheduler is forced to run L
+because there are no higher priority processes available to run. Then, L will
+run until it releases the lock on R, at which point H will finally get to run.
+This is why this is called a "priority inversion"; even though H is of the
+highest priority, it runs after both M and L.
+
+b)
+
+Given this priority inversion issue, the high-priority process would have been
+pushed back behind the LONG running medium-priority process. And since the
+high-priority process was responsible for resetting the watchdog timer, this
+timer most likely kept overflowing, as the high-priority process was not allowed
+to run often enough to reset it. Thus, the Mars rover probably kept on getting
+reset, which would have greatly hampered exploration/measurements/etc.
+
+c)
+
+This approach solves the problem in the following way. When H tries to acquire
+the lock on R, it will fail, just as before. But now, it will donate its
+priority to L. So now the currently running process L has a falsely high
+priority. This means that process M will not supersede it, because L's priority
+is temporarily higher. L will just keep running until it releases resource
+R, at which point H can acquire the lock and start running (and L will get back
+its original priority). So this way, process H is not stuck behind the long
+running process M.
+
+d)
+
+THE SCENARIO
+
+H and L need R1
+MH need R2
+
+L is running, locks R1
+
+H, MH, ML become ready.
+
+H needs R1, so MH starts running, locks R2. L is stopped, R1 remains locked.
+
+MH runs to completion since everything else needs R1 or is of lower priority.
+R2 is unlocked.
+
+After MH finishes, ML starts running since everything else needs R1 or is of
+lower priority. And for that same reason, ML runs to completion.
+
+After ML finishes, L runs until it releases R1. Then, H can acquire R1
+and finally start running.
+
+THE SOLUTION APPROACH
+
+
