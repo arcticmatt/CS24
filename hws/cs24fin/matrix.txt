@@ -1,0 +1,45 @@
+#define SIZE ... /* TODO: SEE BELOW */
+
+typedef int matrix_t[SIZE][SIZE];
+
+void transpose(const matrix_t src, matrix_t dst) {
+    int r, c;
+
+    for (r = 0; r < SIZE; r++)
+        for (c = 0; c < SIZE; c++)
+            dst[c][r] = src[r][c];
+}
+
+===== Problem 1 ======
+
+For memory accesses to src, the stride is 1.
+For memory accesses to dst, the stride is SIZE.
+
+===== Problem 2 ======
+
+We are working with 64 cache sets and 64-byte blocks. So each 32-bit address has
+
+6 bits to specify block offset (marked by b)
+6 bits to specify the set index (marked by s)
+20 bits to specify the block's tag (marked by t)
+
+So, if the set is the same but the block is different, we have the following
+minimal scenario:
+
+00000000000000000001000000000000 // block 1, set 0, offset 0
+00000000000000000000000000111111 // block 0, set 0, offset 63
+^                   ^     ^
+t                   s     b
+
+So we have that the integer difference is
+
+4096 - 63 = 4033
+
+which is between 1 and 2 bytes. So two addresses must be at least 4033 apart
+from each other in value, which is
+
+111111000001 in binary.
+
+===== Problem 3 ======
+
+
