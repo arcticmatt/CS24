@@ -40,10 +40,10 @@ running process M.
 
 d)
 
-THE SCENARIO
+===== THE SCENARIO =====
 
 H and L need R1
-MH need R2
+MH and ML need R2
 
 L is running, locks R1
 
@@ -54,12 +54,55 @@ H needs R1, so MH starts running, locks R2. L is stopped, R1 remains locked.
 MH runs to completion since everything else needs R1 or is of lower priority.
 R2 is unlocked.
 
-After MH finishes, ML starts running since everything else needs R1 or is of
-lower priority. And for that same reason, ML runs to completion.
+After MH finishes, ML starts running (and locks R2) since everything else needs
+R1 or is of lower priority. And for that same reason, ML runs to completion (and
+unlocks R2).
 
 After ML finishes, L runs until it releases R1. Then, H can acquire R1
-and finally start running.
+and finally start running. We can see that this is priority inversion because
+the high priority process runs after all the lower priority processes.
 
-THE SOLUTION APPROACH
+===== THE SOLUTION APPROACH =====
 
+The working solution would look something like follows:
 
+L is running, locks R1
+
+H, MH, ML become ready.
+
+H attemps to lock R1, but L already holds it. L's priority temporarily switches
+to H.
+
+L runs until it releases R1. Then, L's priority switches back to L.
+
+Now H is free to run, locking R1 as it does.
+
+After H finishes (and unlocks R1), MH will run and lock R2. It will run to
+completion, unlocking R2 upon finishing.
+
+After MH finishes, ML will run and lock R2. It will run to completion, unlocking
+R2 upon finishing.
+
+Finally, L will finish running (if it hasn't already).
+
+So in the scenario I have defined, all we really need is the original priority
+donation.
+
+e)
+
+In the context of such deadlocks, priority donation runs into an issue. The
+issue is the following. In priority donation, a process gets a temporarily
+high priority until it releases the resource of interest. However, in the
+context of these deadlocks, the resource of interest will never be released,
+because the process is deadlocked. So now we have a deadlocked process that
+has a falsely high priority. This is bad because the scheduler can only switch
+it out for a process of higher priority, and we just made the processes priority
+falsely higher. So we could be deadlocked for a very long time.
+
+To fix this issue, instead of just switching the processes priority, we can
+keep track of two priorities: the original priority and the temporary priority.
+Then, if a process ever becomes deadlocked, we can tell the scheduler to use
+the original priority instead of the temporary priority when trying to schedule
+new ready processes. Or, to actually fix the deadlock, we could make it so that
+acquiring locks on both resources is atomic; that is, whenever a process needs
+to acquire locks on R1 and R2, it acquires both of them at once.
