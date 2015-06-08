@@ -53,3 +53,54 @@ outside the for-loop (see answer to part a) for more detail). And at this point,
 count is always 2 (again, because each process sees its own copy of the
 variable). So no matter which process ends up finishing, this is the print
 statement with which we will always end, and thus 2 will always be printed last.
+
+===== Problem 2 =====
+
+The output of this program is
+
+counter = 1
+counter = 3
+counter = 3
+
+and it is the same every single time.
+
+What happens is the following:
+
+First, we register handler1 for the signal SIGUSR1. We are currently in the
+"parent" process (it's not really a parent yet, but it is about to be). So
+handler1 is registered for this "parent" process.
+
+Then, we have the line
+
+if ((pid = fork()) == 0)
+
+This generates a child process, in which pid = 0. We also still have our parent
+process, in which pid != 0. The child process executes the "if" code
+(because of the == 0) and the parent process executes the "else" code. We can
+see that the parent process code will execute later because it waits for a state
+change in its child before doing anything. So, let's get the child process code.
+We can see that we register handler2 for the signal SIGUSR1. But then, we call
+kill on the parent process to send it the signal SIGUSR1. Remember that the
+first thing we did was register handler1 for SIGUSR1 in the parent process.
+So that handler gets called here. Then we can see that counter gets incremented
+and printed (in the parent process). That is where we get
+
+counter = 1
+
+from. Then, that handler calls kill(pid, SIGUSR1). Recall that we are now in the
+parent process, which means that the pid here is the pid of the child process.
+So when we call kill with SIGUSR1, the code for handler2 executes. Then, we have
+that counter gets incremented by 3 in the child process (in which counter is
+still 0). That is where we get
+
+counter = 3
+
+from. Then, handler2 calls exit, which causes the child process to terminate. So
+clearly now the status of the child process has changed. Thus, wait(&status)
+will return a nonnegative value, and the parent process code in the else
+statement will proceed. In the parent process, counter at this point is at 1.
+So when it gets incremented by 2 and printed,
+
+counter = 3
+
+gets printed. And so that's that.
