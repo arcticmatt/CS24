@@ -1,0 +1,107 @@
+====== Problem 1 =====
+
+We have that our data set always fits within 4GB. So, at most, we have
+
+4GB / 128 bytes = 4e9 bytes / 128 bytes = 31,250,000 entries total.
+
+Assuming our cache size is around 4MB (lec 15, slide 15), this means we can
+store at most
+
+4MB / 128 bytes = 31,250 entries in the cache. So we can only cache
+.1% of our data. Note that we can't just cache
+keys because keys aren't contiguous in memory; keys and values and contiguous
+in memory.
+
+Then we have that our sorting algorithm as an O(N * log(N)) time complexity,
+which means we are doing around N * log(N) comparisions, where
+N = 31,250,000. So we have that the number of comparisions is around
+
+31,250,000 * log(31,250,000) = 778,042,276.687 ~ 778,042,276
+
+And we have that every comparison has 2 chances to generate a cache miss, which
+gives us
+
+1,556,084,552 chances.
+
+Sorting algorithms start with the data unsorted, and then as the algorithm goes
+on, the data becomes progressively more and more sorted until it is completely
+in the right order. So this means at first, there will be very few cache misses,
+because we will be comparing keys from entries that are close to each other in
+main memory. However, as the data becomes more sorted, we will start to compare
+keys that were originally nowhere near each other in main memory. Then we will
+start to get more cache misses because we will not be able to cache these large
+runs of entries. Going by this logic, it is clear that not every comparision
+will generate a cache miss. However, as the algorithm progresses, cache misses
+become fairly likely, especially because we don't actually sort the records in
+memory. More specifically, since we can only store 31,250 entries in the cache,
+and there are 1000 times as many entries total, there is about a 1/1000 chance
+that any entry is cached.
+
+So, we can approximate the number of cache misses we get to be about
+
+1,556,084,552 * 999/1000 - 31,250,000 ~= 1,523,278,467 cache misses
+
+(we subtract 31,250,000 because for the initial sorting phase there aren't very
+many cache misses).
+
+====== Problem 2 =====
+
+This approach will benefit closer to main-memory speeds, because there are a
+very large number of cache misses. In other words, this approach does not
+utilize the cache very well because it doesn't have very good locality.
+
+====== Problem 3 =====
+
+typedef key_prefix {
+    char prefix[4];
+    record *ptr;
+} key_prefix;
+
+int cmp_records(const key_prefix *rec_ptrs, int i, int j) {
+    // Compare prefixes
+    int prefix_result = memcmp(rec_ptrs[i].prefix, rec_prtrs[j].prefix, 4);
+
+    // If prefixes are equal, compare entire keys and return resulting value
+    if (prefix_result == 0)
+        return memcmp((rec_ptrs[i].ptr)->key, (rec_ptrs[j].ptr)->key, KEY_SIZE);
+
+    // Otherwise, returning the prefix comparision is fine
+    return prefix_result;
+}
+
+====== Problem 4 =====
+
+Given that the keys are comprised of uniformly distributed sequences of the
+characters 'A' through 'Z', the probability that the first four bytes of any
+two keys are the same is the probability that the first four characters of any
+two keys are the same, which we can calculate below:
+
+(1/26)^4 ~= 2.2e-6
+
+Which means that the probability that the first four bytes of any two keys
+do NOT match is
+
+1 - 2.2e-6 ~= .9999
+
+So in other words, using this approach, we will basically never have to access
+the actual records, and we will only have to look at the array of key_prefixes.
+
+Doing the math, if we have 31,250,000 entries in our array and each entry takes
+up 8 bytes, this means our array takes up a total of
+
+31,250,000 * 8 bytes = 250,000,000 bytes = 250MB
+
+Asssuming again that we have a cache of 4MB, this means we can cache
+1.6% of our data, which is a big improvement. Also, now we are sorting the
+data as we go along, which should reduce the number of cache misses, because
+most sorting algorithms compare numbers in a logical sequence (increasing or
+decreasing). For example, merge sorts looks at numbers in increasing order
+when merging. Thus our cache-misses should go down by a lot.
+
+====== Problem 5 =====
+
+If all our keys are very similar, it will be worse. This is because if all
+our keys are very similar, the initial memcmp call will probably just return 0.
+So then, we will have to call memcmp on the entire keys anyways. So we just
+wasted time on the initial memcmp call, and are wasting space storing the
+prefixes.
