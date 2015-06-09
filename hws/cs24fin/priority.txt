@@ -93,7 +93,8 @@ holds, and P1’s priority is higher than P2’s, the system can temporarily don
 P1’s priority to P2, until P2 releases the resource that P1 requires. At that
 point, P2’s priority is lowered back to its original priority.
 
-because that is exactly what happens in the above scenario.
+because that is exactly what happens in the above scenario, with L and H being
+the low and high priority processes.
 
 e)
 
