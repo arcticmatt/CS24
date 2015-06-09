@@ -1,15 +1,3 @@
-#define SIZE ... /* TODO: SEE BELOW */
-
-typedef int matrix_t[SIZE][SIZE];
-
-void transpose(const matrix_t src, matrix_t dst) {
-    int r, c;
-
-    for (r = 0; r < SIZE; r++)
-        for (c = 0; c < SIZE; c++)
-            dst[c][r] = src[r][c];
-}
-
 ===== Problem 1 ======
 
 For memory accesses to src, the stride is 1.
