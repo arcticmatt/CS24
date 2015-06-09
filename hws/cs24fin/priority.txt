@@ -86,7 +86,14 @@ R2 upon finishing.
 Finally, L will finish running (if it hasn't already).
 
 So in the scenario I have defined, all we really need is the original priority
-donation.
+donation. In other words, the solution defined below works just fine:
+
+If a process P1 attempts to lock a resource that another process P2 already
+holds, and P1’s priority is higher than P2’s, the system can temporarily donate
+P1’s priority to P2, until P2 releases the resource that P1 requires. At that
+point, P2’s priority is lowered back to its original priority.
+
+because that is exactly what happens in the above scenario.
 
 e)
 
