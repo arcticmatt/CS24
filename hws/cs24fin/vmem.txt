@@ -1,0 +1,122 @@
+===== Problem 1 =====
+
+The ordering should be as follows, where a higher ranking means the VMM should
+prefer to evict it more.
+
+1) Not Accessed and Not Dirty
+
+    We should prefer to evict this first because it has neither been accessed
+    recently nor written to since it was loaded. So it's a pretty safe bet that
+    we won't be looking at this page anytime soon. Further, since it's not
+    dirty, we don't even have to write it back to disk! So it'll be fast to
+    evict this page too.
+
+2) Not Accessed and Dirty
+
+    We should prefer to evict this second because it hasn't been accessed
+    recently. We evict it after the above class because it has been written to
+    sometime since it has been loaded. Thus, we know that at SOME point this
+    page was accessed. And since we know it was written to, we can reason that
+    it might be written to again. Also, since this class is dirty, if we evict
+    it, we have to write it back to disk. This is slower than evicting a
+    non-dirty page. We would prefer to accumlate all the writes to the page
+    before writing it back. So all in all, that's why this class is second on
+    our list.
+
+3) Accessed and Not Dirty
+
+    We should prefer to evict this third because it has been accessed recently.
+    Thus, it is reasonable to assume that we might be accessing it again in the
+    near future. However, we see that this class is clean - thus, evicting it
+    is fast! So that's why it is above the below class.
+
+4) Accessed and Dirty
+
+    We should prefer to evict this fourth because it has been accessed recently
+    and has been written too. This means it is reasonable to assume that we
+    might be accessing it again in the near future. Also, we might be writing
+    to it again. And since evicting a dirty page requires writing stuff to the
+    disk (which makes things slower), we would prefer to accumulate all the
+    writes to the page before writing it back. That's why we want to evict the
+    non-dirty pages first.
+
+===== Problem 2 =====
+
+a)
+
+Using this value, the VMM can combine the LRU and LFU (least frequently used)
+policies in the following way. First, we want to find all the pages that were
+used least recently. Then of those, we want to find the page that was used
+least frequently. So we can do this in the following way.
+
+To find the pages that were used least recently, we need to find the
+minimum highest set bit position of all pages. In the example below, that
+position is three (indexing starting at one). To do this, we can just shift
+(a copy) of each history value right, keeping track of the highest set bit
+position along the way. Then we take the minimum of all these values.
+Then, once we have found this value, we can binary and each history value with
+the following number:
+
+1 in that position
+followed by all zeroes
+
+So in the example below, we would & each number with 0100. We will keep all
+history values for which this does not result in a zero value; these are the
+history values that were accessed most recently.
+
+Then, we can just count the number of set bits in each of the remaining history
+values by binary anding with the number minus 1 (like we did in the first HW).
+Finally, we will keep the number that has the least set bits. So, in the example
+below, out of 0100 and 0111, we would keep 0100.
+
+Example:
+1010 (highest set bit is at position four)
+0100 (highest set bit is at position three)
+1000 (highest set bit is at position four)
+0111 (highest set bit is at position three)
+
+Binary & each with 0100
+
+Left with just 0100 and 0111
+
+Keep 0100 b/c it has the least number of set bits.
+
+This design makes sense because we want to evict pages that were used the
+longest time ago, as we assume they have a lower chance of being used again
+in the future. But we also want to evict pages that were used less often,
+for the same reason. So we combine those strategies to get our design.
+Note that it would be faster just to take the minimum of all the history values
+and use that page. That would give one of the pages that was used least
+recently, but would not tell us about the frequency.
+
+b)
+
+void update_history(pte_t pte, unsigned int *p_history) {
+    int acc_bitmask = (1 << 4); // = 2 ^ 4
+
+    int accessed = pte & acc_bitmask; // Get the fifth bit
+
+    // Shift history value right by one bit
+    *p_history >>= 1;
+
+
+    // If the page was accessed, set the topmost bit
+    if (accessed) {
+        int top_bitmask = (1 << 31);
+        *p_history = (*p_history) | top_bitmask;
+    }
+}
+
+c)
+
+This policy is similar because we do indeed choose to evict one of the pages
+that was accessed furthest in the past. However, it is different because
+we combine it with the least frequently used policy. That is, if there are
+multiple pages that were accessed least recently, then we choose from them
+the page that was accessed least frequently to evict. In this way, we try to
+improve upon the policy by blending two eviction methods. The logic is that
+pages that are accessed far back probably aren't going to be accessed again,
+and that pages that aren't accessed very frequently probably aren't going
+to be accessed again; by combining these policies, we create a new policy
+that should be better than plain old LRU. However, it is a little slower,
+as I mentioned in part a), because more calculations need to be done.
