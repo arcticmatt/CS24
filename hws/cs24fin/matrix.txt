@@ -35,9 +35,7 @@ So we have that the integer difference is
 
 4096 - 63 = 4033
 
-which is between 1 and 2 bytes. So basically, two addresses must be more than
-1 byte away from each other to refer to different cache blocks, but still map
-to the same cache set.
+and that the overall distance (inclusive) between set bits is 8 bits = 1 byte.
 
 ===== Problem 3 ======
 
@@ -45,7 +43,7 @@ In the worst case, we will only be able to cache 8 values for dst, because
 the inner loop will keep bringing us to the same cache set. We have that each
 jump of the inner loop jumps SIZE * 4 bytes in memory, and since each cache
 block is basically 1 byte away from the next (address wise), and we have 8 cache
-sets, we have that the minimum value for SIZE should be 16. The math there was
+sets, we have that the minimum value for SIZE should be 128. The math there was
 
 8 blocks per cache set * 1 byte distance for cache blocks = 8 bytes for a set
-8 cache sets * 8 bytes for a set = 64 bytes
+64 cache sets * 8 bytes for a set = 512 bytes
