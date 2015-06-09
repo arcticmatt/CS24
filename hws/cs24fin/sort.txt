@@ -48,7 +48,9 @@ many cache misses).
 
 This approach will benefit closer to main-memory speeds, because there are a
 very large number of cache misses. In other words, this approach does not
-utilize the cache very well because it doesn't have very good locality.
+utilize the cache very well because it doesn't have very good locality (reasons
+for that are explained above - the main one is that the data doesn't get sorted
+in memory, only the pointers).
 
 ====== Problem 3 =====
 
